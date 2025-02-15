@@ -25,12 +25,40 @@ import { createRealtimeConnection } from "./lib/realtimeConnection";
 // Agent configs
 import { allAgentSets, defaultAgentSetKey } from "@/app/agentConfigs";
 
+interface AgentInfo {
+  name: string;
+  profile: string;
+}
+
 function App() {
   const searchParams = useSearchParams();
+
+  const voices: AgentInfo[] = [
+    { name: "Andy", profile: "The angry Pirate" },
+    { name: "Bella", profile: "A lively and happy young woman" },
+  ];
+
+  const [voice, setVoice] = useState<AgentInfo>(voices[0]);
+
+  const handleVoiceChange = (voiceName: string) => {
+    const agentInfo = voices.find((v) => v.name === voiceName);
+    if (agentInfo) {
+      setVoice(agentInfo);
+      updateSession();
+      console.log("voice changed to", voiceName);
+    }
+  };
 
   const { transcriptItems, addTranscriptMessage, addTranscriptBreadcrumb } =
     useTranscript();
   const { logClientEvent, logServerEvent } = useEvent();
+
+  function randomVoice() {
+    const randomIndex = Math.floor(Math.random() * voices.length);
+    const v = voices[randomIndex]
+    console.log("voice changed to", v);
+    return v;
+  }
 
   const [selectedAgentName, setSelectedAgentName] = useState<string>("");
   const [selectedAgentConfigSet, setSelectedAgentConfigSet] =
@@ -235,12 +263,12 @@ function App() {
     const turnDetection = isPTTActive
       ? null
       : {
-          type: "server_vad",
-          threshold: 0.5,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 200,
-          create_response: true,
-        };
+        type: "server_vad",
+        threshold: 0.5,
+        prefix_padding_ms: 300,
+        silence_duration_ms: 200,
+        create_response: true,
+      };
 
     const instructions = currentAgent?.instructions || "";
     const tools = currentAgent?.tools || [];
@@ -403,21 +431,20 @@ function App() {
 
   const agentSetKey = searchParams.get("agentConfig") || "default";
 
+  // useEffect(() => {
+  //   randomVoice();
+  // }, []);
+
   return (
     <div className="text-base flex flex-col h-screen bg-gray-100 text-gray-800 relative">
       <div className="p-5 text-lg font-semibold flex justify-between items-center">
         <div className="flex items-center">
           <div onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
-            <Image
-              src="/openai-logomark.svg"
-              alt="OpenAI Logo"
-              width={20}
-              height={20}
-              className="mr-2"
-            />
           </div>
           <div>
-            Realtime API <span className="text-gray-500">Agents</span>
+            <span className="agent-name">{voice.name}</span>
+            <span className="p-2 agent-profile">{voice.profile}</span>
+
           </div>
         </div>
         <div className="flex items-center">
@@ -496,6 +523,14 @@ function App() {
 
         <Events isExpanded={isEventsPaneExpanded} />
       </div>
+
+      <button onClick={() => handleVoiceChange("coral")}> Coral </button>
+      <button onClick={() => handleVoiceChange("nova")}> Nova </button>
+      <button onClick={() => handleVoiceChange("shimmer")}> Shimmer </button>
+      <button onClick={() => handleVoiceChange("sage")}> Sage </button>
+      <button onClick={() => handleVoiceChange("spark")}> Spark </button>
+      <button onClick={() => handleVoiceChange("tilda")}> Tilda </button>
+      <button onClick={() => handleVoiceChange("will")}> Will </button>
 
       <BottomToolbar
         sessionStatus={sessionStatus}
