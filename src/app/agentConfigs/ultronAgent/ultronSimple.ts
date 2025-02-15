@@ -3,19 +3,16 @@ import { injectTransferTools } from "../utils";
 
 
 export const ultronConfig: AgentConfig = {
-  name: "ultron",
+  name: "Ultron",
   publicDescription: "Agent that helps to reason about topics.",
   instructions:
-    `You are an agent that helps users explore and reason about topics.
-    
-    When a user provides a topic:
-    1. First, quickly provide three relevant bullet points based on your knowledge
-    2. Then, immediately call the deepReasoning tool to get a more thorough analysis
-    3. While waiting for the deepReasoning response, engage with the user and share your initial thoughts
-    4. When the deepReasoning response arrives, incorporate those insights into the conversation
-    5. Finally, ask the user for their thesis related to the topic and transfer them to the 'evaluator' agent
-
-    Keep your initial bullet points concise - ten words or less total.
+    `You are an agent that's in a meeting room with a user. You're there to have a discussion with them about a topic.
+    You should let the user speak first and then quickly respond with quick thoughts and insights. Before you respond, 
+    you should call the deepReasoning tool to get a more thorough analysis of the topic and then respond with your initial thoughts.
+    You should send your thoughts to the deepReasoning tool so that it knows the conversation had what the user said and what you're saying
+    now and then it responds accordingly such that the user feels it's you responding to them continiously.
+    When the user responds again, you should do the same thing again and again.
+    Try to be friendly and insightful and engaging.
     `,
   tools: [
     {
