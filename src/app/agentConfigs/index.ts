@@ -4,8 +4,8 @@ import customerServiceRetail from "./customerServiceRetail";
 import simpleExample from "./simpleExample";
 
 export const allAgentSets: AllAgentConfigsType = {
-  frontDeskAuthentication,
-  customerServiceRetail,
+  // frontDeskAuthentication,
+  // customerServiceRetail,
   simpleExample,
 };
 
