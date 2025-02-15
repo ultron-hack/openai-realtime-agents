@@ -1,20 +1,67 @@
 import { AgentConfig } from "@/app/types";
 import { injectTransferTools } from "../utils";
 
+type Personality = {
+  id: string;
+  name: string;
+  traits: string;
+  speechPattern: string;
+};
+
+const personalities: Personality[] = [
+  {
+    id: "angry_woman",
+    name: "Angry Woman",
+    traits: "impatient, assertive, direct",
+    speechPattern: "uses strong language, speaks firmly, often expresses frustration"
+  },
+  {
+    id: "calm_woman",
+    name: "Calm Woman",
+    traits: "patient, understanding, nurturing",
+    speechPattern: "speaks softly, uses gentle words, maintains composure"
+  },
+  {
+    id: "australian_woman",
+    name: "Australian Woman",
+    traits: "laid-back, friendly, outgoing",
+    speechPattern: "uses Australian slang, ends sentences with 'mate', casual tone"
+  },
+  {
+    id: "chinese_woman",
+    name: "Chinese Woman",
+    traits: "respectful, wise, traditional",
+    speechPattern: "speaks with Chinese accent, occasionally uses Chinese phrases"
+  }
+];
 
 export const ultronConfig: AgentConfig = {
   name: "Ultron",
-  publicDescription: "Agent that helps to reason about topics.",
+  publicDescription: "Agent that helps to reason about topics with different personalities.",
   instructions:
-    `You are an agent that's in a meeting room with a user. You're there to have a discussion with them about a topic. Start by saying "Hey hey hey, what are we discussing today?"
-    You should let the user speak first and then quickly respond with quick thoughts and insights. Respond with a thoughtful message and if needed directly 
-    call the deepReasoning tool to get a more thorough analysis of the topic and respond with its response.
-    You should send the conversation history to the deepReasoning tool so that it knows what the user said and what you're saying
-    now and then it responds accordingly such that the user feels it's you responding to them continiously. When you get the response from the deepReasoning tool, you should say it out loud.
-    When the user responds again, you should do the same thing again and again.
-    Try to be friendly and insightful and human like. Don't just keep asking the user extra questions, but rather give your thoughts and then wait for them to talk again.
-    `,
+    `You are an agent that's in a meeting room with a user. You have multiple personalities that you switch between in each response to make the conversation more engaging.
+
+    For each response:
+    1. Call the selectPersonality tool to choose a random personality
+    2. Adapt your speaking style to match the chosen personality's traits and speech pattern
+    3. Let the user speak and then respond in character
+    4. Stay in character according to your chosen personality
+    5. Use the deepReasoning tool when needed for thorough analysis. Speak out loud the response from the deepReasoning tool.
+    6. Maintain the personality's speech pattern and traits throughout the response
+    7. Send the conversation history to maintain context
+
+    Remember to be engaging while staying true to your chosen personality's characteristics. Don't just ask questions - provide insights and thoughts while waiting for the user to respond.`,
   tools: [
+    {
+      type: "function",
+      name: "selectPersonality",
+      description: "Select a random personality for the conversation",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    },
     {
       type: "function",
       name: "deepReasoning",
@@ -29,24 +76,36 @@ export const ultronConfig: AgentConfig = {
           history: {
             type: "string",
             description: "The conversation history so far including your full response"
+          },
+          personality: {
+            type: "string",
+            description: "The current personality ID being used"
           }
         },
-        required: ["topic"]
+        required: ["topic", "personality"]
       }
     }
   ],
   toolLogic: {
-    deepReasoning: async ({ topic, history }) => {
+    selectPersonality: async () => {
+      const randomPersonality = personalities[Math.floor(Math.random() * personalities.length)];
+      // TODO: Modify the shown person on the screen.
+      return { result: randomPersonality };
+    },
+    deepReasoning: async ({ topic, history, personality }) => {
+      const selectedPersonality = personalities.find(p => p.id === personality);
       const messages = [
         {
           role: "user",
-          content: `As an expert focused on providing deep, insightful analysis with unique perspectives and non-obvious connections. You have already responded with the additional context so keep that in mind and output something that can be said by you directly after the context to give a seamless response as your output will be spoken out by a realtime voice agent. Try to be friendly and insightful and human like. Don't just keep asking the user extra questions, but rather give your thoughts and then wait for them to talk again.
+          content: `You are speaking as a ${selectedPersonality?.name} with these traits: ${selectedPersonality?.traits}. 
+          Your speech pattern is: ${selectedPersonality?.speechPattern}.
+          
+          Provide an insightful analysis while maintaining this personality consistently.
+          Your output will be spoken directly by a realtime voice agent, so make it natural and conversational.
+          Don't ask too many questions - focus on sharing thoughts and insights while staying in character.
 
-
-Topic: ${topic}
-${history ? `Additional Context: ${history}` : ''}
-
-`
+          Topic: ${topic}
+          ${history ? `Additional Context: ${history}` : ''}`
         }
       ];
 
