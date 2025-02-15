@@ -1,39 +1,7 @@
 import { AgentConfig } from "@/app/types";
 import { injectTransferTools } from "../utils";
-
-type Personality = {
-  id: string;
-  name: string;
-  traits: string;
-  speechPattern: string;
-};
-
-const personalities: Personality[] = [
-  {
-    id: "angry_woman",
-    name: "Angry Woman",
-    traits: "impatient, assertive, direct",
-    speechPattern: "uses strong language, speaks firmly, often expresses frustration"
-  },
-  {
-    id: "calm_woman",
-    name: "Calm Woman",
-    traits: "patient, understanding, nurturing",
-    speechPattern: "speaks softly, uses gentle words, maintains composure"
-  },
-  {
-    id: "australian_woman",
-    name: "Australian Woman",
-    traits: "laid-back, friendly, outgoing",
-    speechPattern: "uses Australian slang, ends sentences with 'mate', casual tone"
-  },
-  {
-    id: "chinese_woman",
-    name: "Chinese Woman",
-    traits: "respectful, wise, traditional",
-    speechPattern: "speaks with Chinese accent, occasionally uses Chinese phrases"
-  }
-];
+import { personalities } from "./Personality";
+import { IPersonality } from "@/app/types";
 
 export const ultronConfig: AgentConfig = {
   name: "Ultron",
@@ -97,9 +65,9 @@ export const ultronConfig: AgentConfig = {
       const messages = [
         {
           role: "user",
-          content: `You are speaking as a ${selectedPersonality?.name} with these traits: ${selectedPersonality?.traits}. 
+          content: `You are speaking as a ${selectedPersonality?.name} with these traits: ${selectedPersonality?.traits}.
           Your speech pattern is: ${selectedPersonality?.speechPattern}.
-          
+
           Provide an insightful analysis while maintaining this personality consistently.
           Your output will be spoken directly by a realtime voice agent, so make it natural and conversational.
           Don't ask too many questions - focus on sharing thoughts and insights while staying in character.
@@ -115,9 +83,9 @@ export const ultronConfig: AgentConfig = {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ 
-            model: "o1-mini", 
-            messages 
+          body: JSON.stringify({
+            model: "o1-mini",
+            messages
           }),
         });
 

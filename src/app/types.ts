@@ -106,3 +106,11 @@ export interface LoggedEvent {
   eventName: string;
   eventData: Record<string, any>; // can have arbitrary objects logged
 }
+
+
+export type IPersonality = {
+  id: string;
+  name: string;
+  traits: string;
+  speechPattern: string;
+};
