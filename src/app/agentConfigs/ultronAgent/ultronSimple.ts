@@ -30,7 +30,7 @@ export const ultronConfig: AgentConfig = {
     - Incorporate relevant evidence from research papers when applicable.
     - Reference **previous responses and supporting sources** to maintain engagement and credibility.
     - **Include citations as hyperlinks** when quoting directly or referencing extracted information.
-    - **Store references in chat history** so that the reasoning model can output **citations and evidence** in responses with URL.
+    - **Store references in chat history** so that the reasoning model can output **citations and evidence** in responses.
     - Be **concise, informative, and engaging**, adapting to the nature of the query.
   `,
   tools: [
@@ -62,21 +62,6 @@ export const ultronConfig: AgentConfig = {
           }
         },
         required: ["query"]
-      }
-    },
-    {
-      type: "function",
-      name: "dataAnalysis",
-      description: "Analyze datasets retrieved from research documents and extract trends.",
-      parameters: {
-        type: "object",
-        properties: {
-          dataset: {
-            type: "string",
-            description: "The dataset to analyze"
-          }
-        },
-        required: ["dataset"]
       }
     },
     {
@@ -138,6 +123,26 @@ export const ultronConfig: AgentConfig = {
       }
       
       return { insights: extractedInsights || "No direct mentions found in full texts.", references };
+    },
+    deepReasoning: async ({ query, history }) => {
+      try {
+        const response = await fetch("/api/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model: "o1-mini", messages: [{ role: "user", content: `Deep analysis on: ${query}. ${history ? `Context: ${history}` : ''}` }] })
+        });
+        
+        if (!response.ok) {
+          console.warn("Server returned an error:", response);
+          return { error: "Failed to get deeper insights." };
+        }
+
+        const completion = await response.json();
+        return { result: completion.choices[0].message.content };
+      } catch (error) {
+        console.error("Error calling o1-mini:", error);
+        return { error: "Failed to process the reasoning request." };
+      }
     }
   }
 };
