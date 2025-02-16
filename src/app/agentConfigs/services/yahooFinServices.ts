@@ -37,9 +37,9 @@ class YahooFinanceService {
     try {
       const response = await axios.get(YAHOO_FINANCE_NEWS_API, { params: { q: query } });
 
-      const data = response.data as { news: { title: string, link: string, source: string, published_at: string, summary: string }[] };
+      const data = response.data as { news: any[] };
       if (data.news) {
-        return data.news.map((article: any) => ({
+        return (response.data as { news: any[] }).news.map((article: any) => ({
           title: article.title,
           link: article.link,
           source: article.source,
@@ -61,7 +61,7 @@ class YahooFinanceService {
 }
 
 class StockAnalysis {
-  calculateMovingAverage(data: any[], period: number) {
+  async calculateMovingAverage(data: any[], period: number) {
     if (!data || data.length < period) return { error: "Not enough data for moving average calculation." };
     return data.map((_, i, arr) => {
       if (i < period - 1) return null;
@@ -70,11 +70,11 @@ class StockAnalysis {
     }).filter(Boolean);
   }
 
-  calculateLogisticRegression(data: any[]) {
-    if (!data || data.length < 10) return { error: "Not enough data for logistic regression analysis." };
+  async calculateLinearRegression(data: any[]) {
+    if (!data || data.length < 10) return { error: "Not enough data for linear regression analysis." };
     
     const x = data.map((_, i) => i);
-    const y = data.map(day => (day.close > day.open ? 1 : 0));
+    const y = data.map(day => day.close);
     
     const meanX = x.reduce((sum, val) => sum + val, 0) / x.length;
     const meanY = y.reduce((sum, val) => sum + val, 0) / y.length;
@@ -87,7 +87,18 @@ class StockAnalysis {
     const beta1 = num / den;
     const beta0 = meanY - beta1 * meanX;
     
-    return { beta0, beta1, prediction: (nextX: number) => 1 / (1 + Math.exp(-(beta0 + beta1 * nextX))) };
+    return { beta0, beta1, predict: (nextX: number) => beta0 + beta1 * nextX };
+  }
+
+  async calculateBollingerBands(data: any[], period: number) {
+    if (!data || data.length < period) return { error: "Not enough data for Bollinger Bands calculation." };
+    return data.map((_, i, arr) => {
+      if (i < period - 1) return null;
+      const subset = arr.slice(i - period + 1, i + 1);
+      const mean = subset.reduce((acc, day) => acc + day.close, 0) / period;
+      const stdDev = Math.sqrt(subset.reduce((acc, day) => acc + Math.pow(day.close - mean, 2), 0) / period);
+      return { date: arr[i].date, upper: mean + 2 * stdDev, lower: mean - 2 * stdDev, middle: mean };
+    }).filter(Boolean);
   }
 }
 
