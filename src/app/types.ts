@@ -113,4 +113,6 @@ export type IPersonality = {
   name: string;
   traits: string;
   speechPattern: string;
+  active?: boolean;
+  emoji?: string;
 };

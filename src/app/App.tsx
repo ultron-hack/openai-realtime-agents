@@ -410,17 +410,13 @@ function App() {
 
   const agentSetKey = searchParams.get("agentConfig") || "default";
 
-  // useEffect(() => {
-  //   randomVoice();
-  // }, []);
+
 
   return (
     <div className="text-base flex flex-col h-screen bg-gray-100 text-gray-800 relative">
       <div className="p-5 text-lg font-semibold flex justify-between items-center">
         <div className="flex items-center">
-          <div onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
-            <PersonalityBar />
-          </div>
+          <PersonalityBar />
         </div>
         <div className="flex items-center">
           <label className="flex items-center text-base gap-1 mr-2 font-medium">
@@ -517,3 +513,6 @@ function App() {
 }
 
 export default App;
+
+
+//   <div className='small-button' onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>reload</div>

@@ -1,7 +1,8 @@
 import { AgentConfig } from "@/app/types";
 import { injectTransferTools } from "../utils";
-import { personalities } from "./Personality";
-import { IPersonality } from "@/app/types";
+import _ from "lodash";
+import { personaList, setPersona } from "@/app/state/atoms";
+
 
 export const ultronConfig: AgentConfig = {
   name: "Ultron",
@@ -56,12 +57,15 @@ export const ultronConfig: AgentConfig = {
   ],
   toolLogic: {
     selectPersonality: async () => {
-      const randomPersonality = personalities[Math.floor(Math.random() * personalities.length)];
+      const randomPersona = _.sample(personaList)
       // TODO: Modify the shown person on the screen.
-      return { result: randomPersonality };
+      if (randomPersona) {
+        setPersona(randomPersona)
+      }
+      return { result: randomPersona };
     },
     deepReasoning: async ({ topic, history, personality }) => {
-      const selectedPersonality = personalities.find(p => p.id === personality);
+      const selectedPersonality = personaList.find(p => p.id === personality);
       const messages = [
         {
           role: "user",
