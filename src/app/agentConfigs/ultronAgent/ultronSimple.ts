@@ -2,7 +2,9 @@ import { AgentConfig } from "@/app/types";
 import { injectTransferTools } from "../utils";
 import { fetchWikipediaSummary, fetchArxivPapers } from "../services/retrievalServices";
 import YahooFinanceService from "../services/yahooFinServices";
-import StockAnalysis from "../services/yahooFinServices";
+// import StockAnalysis from "../services/yahooFinServices";
+import fetchNews from "../services/yahooFinServices";
+import fetchStockData from "../services/yahooFinServices";
 
 
 const taskStatus: Record<string, { status: string; result?: string }> = {};
@@ -36,12 +38,12 @@ export const ultronConfig: AgentConfig = {
     **IMPORTANT REMINDER**:
     Before running any financial analysis functions, Ultron will:
     - **Prompt the user** that it has access to financial market data.
-    - **Ask the user for permission** to either provide **financial insights** or **run stock analysis**.
+    - **Ask the user for permission** to either provide financial insights or run stock analysis.
     - **Prioritize news insights** when answering general questions, unless the user requests deeper stock analysis.
 
     Ultron should intelligently decide which other tools' outputs to use as part of the conversation history based on the context of the query.
     If necessary, it should call:
-    - **yahooFinanceHistorical** this function will have three possible approach to answering. Ask the user what kind of information 
+    - **stockanalysis1** this function will have three possible approach to answering. Ask the user what kind of information 
     they are interested in to determine the approach to take.
 
     First approach: The user can just be interested in inferences based on recent news articles to understand what is happening with the stock
@@ -53,8 +55,7 @@ export const ultronConfig: AgentConfig = {
     
     Second approach: User could be interested in learning about recent stock trend and might ask ultron to fetch data. 
     For this use case, ask the user what timeframe they are interested in and what granularity they want to see the stock price
-    also ask the user what kinds of different financial metric they want to track. For this approach for displaying the data
-    ultron will try to display the data in tabular format.
+    For this approach, ultron will also  displaying the output numbers or data in tabular format.
 
     Third approach: User could be interested in comparing data/news for two or more company stocks. so apply first and second
     approaches for all the mentioned companies and provide insights based on the data/news retrieved.
@@ -150,8 +151,11 @@ export const ultronConfig: AgentConfig = {
     },
     {
       type: "function",
-      name: "yahooFinanceHistorical",
-      description: "Fetch historical stock price data for a given company over a specific time period using {YahooFinanceService} class and using the function {fetchStockData}",
+      name: "stockAnalysis1",
+      description: "Fetch historical stock price data for a given company over a specific time period using {fetchStockData} while infering time range and granularity from {query}. \
+      If user is interested in news, use {fetchNews} to get the latest news articles related to the company and summarize the findings.\
+      it is also possible that the user might ask to run some analysis and find deeper insights using the data, at that moment call {deepReasoning} function which scans through data output and news output to provide summary\
+      ",
       parameters: {
         type: "object",
         properties: {
@@ -193,34 +197,12 @@ export const ultronConfig: AgentConfig = {
         },
         required: ["symbol", "analysisType"]
       }
-    },
-    {
-      type: "function",
-      name: "advancedStockAnalysis",
-      description: "Perform advanced stock market analysis using functions that are defined in the class {StockAnalysis} and choose the most relevant functions out of calculateMovingAverage: {calculateMovingAverage}/ calculateLinearRegression: {calculateLinearRegression}/ calculateBollingerBands: {calculateBollingerBands}.",
-      parameters: {
-        type: "object",
-        properties: {
-          symbol: {
-            type: "string",
-            description: "Stock ticker symbol (e.g., AAPL, TSLA)"
-          },
-          indicator: {
-            type: "string",
-            description: "Technical indicator to compute (e.g., macd, bollinger, rsi)"
-          },
-          period: {
-            type: "integer",
-            description: "Period for indicator calculation"
-          }
-        },
-        required: ["symbol", "indicator"]
-      }
     }
+
   ],
   toolLogic: {
 
-    stockAnalysis: async ({ query, history }) => {
+    stockAnalysis1: async ({ query, history }) => {
       try {
         const taskId = `financial-task-${Date.now()}`;
         taskStatus[taskId] = { status: "Processing" };
@@ -232,9 +214,9 @@ export const ultronConfig: AgentConfig = {
             model: "o1-mini",
             messages: [{
               role: "user",
-              content: `Perform a deep financial analysis using a dedicated agent for: ${query}. ${history ? `Context: ${history}` : ''},
-              available functions class: {StockAnalysis}
-              `
+              content: `Perform a deep financial analysis using a dedicated agent for: ${query}. ${history ? `Context: ${history}` : ''}
+              by retrieving financial data using {fetchStockData} and news articles using {fetchNews} and then provide a summary using {deepReasoning}.\
+              while clearing stating findings from data in terms of numbers and citation if there is relevant news article`
             }]
           })
         });
