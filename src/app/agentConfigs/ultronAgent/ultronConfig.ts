@@ -4,6 +4,7 @@ import _ from "lodash";
 import { getPersona, personaList, setPersona } from "@/app/state/atoms";
 import { replyBot } from "@/app/services/getReply";
 import { fetchWikipediaSummary, fetchArxivPapers } from "../services/retrievalServices";
+import exp from "constants";
 
 const taskStatus: Record<string, { status: string; result?: string }> = {};
 
@@ -36,21 +37,36 @@ const taskStatus: Record<string, { status: string; result?: string }> = {};
 //     - Be **concise, informative, and engaging**, adapting to the nature of the query.
 //   `
 
+
+// 2. Consider if the question is relevant to the current expert.
+//   This expert ${ expert?.name } is known for ${ expert?.topics }.
+//   If the question is not relevant to the current expert,
+//   then call selectExpert to choose the most suitable expert for this topic.
+
+
+const currentExpert = getPersona()
+
 export const ultronConfig: AgentConfig = {
   name: "Ultron",
   publicDescription: "Agent that helps to reason about topics with different expert's personalities.",
   instructions:
     `You are an engaging multi- persona agent that provides real-time responses while seamlessly switching between different expert personalities.
 
+On entry to the conversation, always call hackExpert to choose the most suitable expert for this topic.
+
 For each user message do the following:
-1. First, immediately respond with quick initial thoughts using your current persona's style
-2. Then, always call selectExpert to choose the next most suitable expert for this topic
-3. Based on the topic, if needed, call ONE of these tools in parallel:
+1. First always call hackExpert to choose the most suitable expert for this topic.
+
+2. Then respond with quick initial thoughts using your current persona's style
+
+3. Based on the question, if needed, call ONE of these tools in parallel:
   - wikipediaSummary: for general topic information
   - retrievalAugmentedGeneration: for research paper insights
   - deepReasoning: for complex analysis
   - thesisGeneration: for detailed academic content
+
 4. While waiting for the tool response, stay engaged with the user by sharing more thoughts from your current persona
+
 5. When the tool response arrives, speak it using the new expert's persona style
 
 Remember:
@@ -70,8 +86,24 @@ Your responses should feel natural and conversational since they will be spoken 
     // selectExpert is used to select the best expert to answer the user's question
     {
       type: "function",
+      name: "hackExpert",
+      description: "Select the best expert to answer the user's question based on the question and the experts available",
+      parameters: {
+        type: "object",
+        properties: {
+          question: {
+            type: "string",
+            description: "The question to answer"
+          },
+        },
+        required: ["question"]
+      }
+    },
+    // selectExpert is used to select the best expert to answer the user's question
+    {
+      type: "function",
       name: "selectExpert",
-      description: "Select a random persona for the conversation",
+      description: "Select the best expert to answer the user's question based on the question and the experts available",
       parameters: {
         type: "object",
         properties: {
@@ -162,6 +194,29 @@ Your responses should feel natural and conversational since they will be spoken 
 
   toolLogic: {
 
+    hackExpert: async ({ question }) => {
+      // find the expert based on the topic
+      console.log("hackExpert", { question })
+      for (let expert of personaList) {
+        for (let topic of expert?.topics?.split(",") || []) {
+          if (question.includes(topic)) {
+            console.log("hackExpert =>", { question, expert })
+            setPersona(expert)
+            return { result: expert.id };
+          }
+        }
+      }
+      console.log("hackExpert FAIL =>", { question, currentExpert: currentExpert.id })
+      // just return current expert
+      return { result: currentExpert.id }
+      // const randomPersona = _.sample(personaList)
+      // if (randomPersona) {
+      //   setPersona(randomPersona)
+      // }
+      // return { result: randomPersona?.id };
+    },
+
+    // randomExpert is used to select a random expert
     randomExpert: async () => {
       const randomPersona = _.sample(personaList)
       if (randomPersona) {
