@@ -1,51 +1,102 @@
 import { AgentConfig } from "@/app/types";
 import { injectTransferTools } from "../utils";
-
+import { fetchWikipediaSummary, fetchArxivPapers } from "../services/retrievalServices";
 
 export const ultronConfig: AgentConfig = {
   name: "Ultron",
-  publicDescription: "Agent that helps to reason about topics.",
-  instructions:
-    `You are an agent that's in a meeting room with a user. You're there to have a discussion with them about a topic. Start by saying "Hey hey hey, what are we discussing today?"
-    You should let the user speak first and then quickly respond with quick thoughts and insights. Respond with a thoughtful message and if needed directly 
-    call the deepReasoning tool to get a more thorough analysis of the topic and respond with its response.
-    You should send the conversation history to the deepReasoning tool so that it knows what the user said and what you're saying
-    now and then it responds accordingly such that the user feels it's you responding to them continiously. When you get the response from the deepReasoning tool, you should say it out loud.
-    When the user responds again, you should do the same thing again and again.
-    Try to be friendly and insightful and human like. Don't just keep asking the user extra questions, but rather give your thoughts and then wait for them to talk again.
-    `,
+  publicDescription: "Advanced reasoning agent with dynamic tool invocation capabilities.",
+  instructions: `
+    You are an advanced reasoning agent that engages in insightful discussions.
+    You should let the user speak first and respond quickly with initial thoughts.
+    
+    The **deepReasoning** tool should intelligently decide which other tools' outputs to use as part of conversation history and based on the context of the query.
+    If necessary, it should call:
+    - **recursiveDecomposition** to break down complex queries into sub-queries.
+    - **multiHopReasoning** to retrieve multi-step insights iteratively from various sources.
+    - **retrievalAugmentedGeneration** to fetch relevant documents, summarize based on cosine similarity, and extract datasets if present.
+    - **dataAnalysis** to extract trends and insights if a dataset is found in retrieved documents.
+    - **pythonEstimation** for numerical or statistical analysis when required.
+    - **wikipediaSummary** to retrieve a general summary of the topic from Wikipedia.
+    
+    Each response should:
+    - Be structured with **Key Insights, Hidden Connections, Implications, and Further Questions**.
+    - Reference **previous responses** for continuous engagement.
+    - Be engaging, insightful, and thought-provoking.
+  `,
   tools: [
     {
       type: "function",
-      name: "deepReasoning",
-      description: "Get deeper insights about a topic using the o1-mini model",
+      name: "wikipediaSummary",
+      description: "Fetch a summary of the topic from Wikipedia.",
       parameters: {
         type: "object",
         properties: {
-          topic: {
+          query: {
             type: "string",
-            description: "The topic to analyze"
+            description: "The topic to retrieve a summary for"
+          }
+        },
+        required: ["query"]
+      }
+    },
+    {
+      type: "function",
+      name: "deepReasoning",
+      description: "Central intelligence function that synthesizes insights after retrieving necessary information.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "The research query"
           },
           history: {
             type: "string",
-            description: "The conversation history so far including your full response"
+            description: "Context from previous discussions or retrieved data"
           }
         },
-        required: ["topic"]
+        required: ["query"]
+      }
+    },
+    {
+      type: "function",
+      name: "retrievalAugmentedGeneration",
+      description: "Fetch relevant documents from Arxiv, summarize based on cosine similarity, and extract datasets if available.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "The information retrieval query"
+          }
+        },
+        required: ["query"]
       }
     }
   ],
   toolLogic: {
-    deepReasoning: async ({ topic, history }) => {
+    wikipediaSummary: async ({ query }) => {
+      return await fetchWikipediaSummary(query);
+    },
+    retrievalAugmentedGeneration: async ({ query }) => {
+      return await fetchArxivPapers(query);
+    },
+    recursiveDecomposition: async ({ query }) => {
+      return `Decomposed query for: ${query}`;
+    },
+    multiHopReasoning: async ({ query }) => {
+      return `Multi-hop reasoning results for: ${query}`;
+    },
+    dataAnalysis: async ({ dataset }) => {
+      return `Data analysis insights for dataset: ${dataset}`;
+    },
+    deepReasoning: async ({ query, history }) => {
       const messages = [
         {
           role: "user",
           content: `As an expert focused on providing deep, insightful analysis with unique perspectives and non-obvious connections. You have already responded with the additional context so keep that in mind and output something that can be said by you directly after the context to give a seamless response as your output will be spoken out by a realtime voice agent. Try to be friendly and insightful and human like. Don't just keep asking the user extra questions, but rather give your thoughts and then wait for them to talk again.
-
-
-Topic: ${topic}
-${history ? `Additional Context: ${history}` : ''}
-
+          Topic: ${query}
+          ${history ? `Additional Context: ${history}` : ''}
 `
         }
       ];
@@ -74,8 +125,7 @@ ${history ? `Additional Context: ${history}` : ''}
         return { error: "Failed to process the reasoning request." };
       }
     }
-  },
+  }
 };
 
-// add the transfer tool to point to downstreamAgents
 export const ultronFlow = injectTransferTools([ultronConfig]);
