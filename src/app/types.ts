@@ -113,6 +113,20 @@ export type IPersonality = {
   name: string;
   traits: string;
   speechPattern: string;
+  topics?: string;
   active?: boolean;
   emoji?: string;
 };
+
+
+export type Message = {
+  role: "user" | "assistant",
+  content: string,
+  // createdAt: number,
+  // id: string,
+  // isHidden: boolean,
+  // isUser: boolean,
+  // isAssistant: boolean,
+  // isSystem: boolean,
+
+}

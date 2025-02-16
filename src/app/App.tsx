@@ -25,6 +25,7 @@ import { createRealtimeConnection } from "./lib/realtimeConnection";
 // Agent configs
 import { allAgentSets, defaultAgentSetKey } from "@/app/agentConfigs";
 import { PersonalityBar } from "./components/PersonalityBar";
+import { mainVoice } from "./state/constants";
 
 
 function App() {
@@ -253,7 +254,7 @@ function App() {
       session: {
         modalities: ["text", "audio"],
         instructions,
-        voice: "coral",
+        voice: mainVoice,
         input_audio_format: "pcm16",
         output_audio_format: "pcm16",
         input_audio_transcription: { model: "whisper-1" },

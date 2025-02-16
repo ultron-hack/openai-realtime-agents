@@ -80,7 +80,7 @@ function Transcript({
           ref={transcriptRef}
           className="overflow-auto p-4 flex flex-col gap-y-4 h-full"
         >
-          {transcriptItems.map((item) => {
+          {transcriptItems.map((item: TranscriptItem) => {
             const { itemId, type, role, data, expanded, timestamp, title = "", isHidden } = item;
 
             if (isHidden) {
@@ -116,16 +116,14 @@ function Transcript({
                 >
                   <span className="text-xs font-mono">{timestamp}</span>
                   <div
-                    className={`whitespace-pre-wrap flex items-center font-mono text-sm text-gray-800 ${
-                      data ? "cursor-pointer" : ""
-                    }`}
+                    className={`whitespace-pre-wrap flex items-center font-mono text-sm text-gray-800 ${data ? "cursor-pointer" : ""
+                      }`}
                     onClick={() => data && toggleTranscriptItemExpand(itemId)}
                   >
                     {data && (
                       <span
-                        className={`text-gray-400 mr-1 transform transition-transform duration-200 select-none font-mono ${
-                          expanded ? "rotate-90" : "rotate-0"
-                        }`}
+                        className={`text-gray-400 mr-1 transform transition-transform duration-200 select-none font-mono ${expanded ? "rotate-90" : "rotate-0"
+                          }`}
                       >
                         ▶
                       </span>
