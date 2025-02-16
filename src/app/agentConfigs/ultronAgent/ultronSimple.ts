@@ -1,45 +1,8 @@
 import { AgentConfig } from "@/app/types";
 import { injectTransferTools } from "../utils";
+import _ from "lodash";
+import { personaList, setPersona } from "@/app/state/atoms";
 
-type Personality = {
-  id: string;
-  name: string;
-  traits: string;
-  speechPattern: string;
-};
-
-const personalities: Personality[] = [
-  {
-    id: "american_woman",
-    name: "American Woman",
-    traits: "patient, understanding, nurturing",
-    speechPattern: "uses American slang"
-  },
-  {
-    id: "australian_woman",
-    name: "Australian Woman",
-    traits: "laid-back, friendly, outgoing",
-    speechPattern: "uses Australian slang"
-  },
-  {
-    id: "indian_woman",
-    name: "Indian Woman",
-    traits: "warm, friendly, traditional",
-    speechPattern: "speaks with Indian accent, occasionally uses Indian phrases"
-  },
-  {
-    id: "chinese_woman",
-    name: "Chinese Woman",
-    traits: "respectful, wise, traditional",
-    speechPattern: "speaks with Chinese accent, occasionally uses Chinese phrases"
-  },
-  {
-    id: "egyptian_woman",
-    name: "Egyptian Woman",
-    traits: "warm, friendly, traditional",
-    speechPattern: "speaks with Egyptian accent, occasionally uses Egyptian phrases"
-  }
-];
 
 export const ultronConfig: AgentConfig = {
   name: "Ultron",
@@ -90,18 +53,21 @@ export const ultronConfig: AgentConfig = {
   ],
   toolLogic: {
     selectPersonality: async () => {
-      const randomPersonality = personalities[Math.floor(Math.random() * personalities.length)];
+      const randomPersona = _.sample(personaList)
       // TODO: Modify the shown person on the screen.
-      return { result: randomPersonality };
+      if (randomPersona) {
+        setPersona(randomPersona)
+      }
+      return { result: randomPersona };
     },
     deepReasoning: async ({ topic, history, personality }) => {
-      const selectedPersonality = personalities.find(p => p.id === personality);
+      const selectedPersonality = personaList.find(p => p.id === personality);
       const messages = [
         {
           role: "user",
-          content: `You are speaking as a ${selectedPersonality?.name} with these traits: ${selectedPersonality?.traits}. 
+          content: `You are speaking as a ${selectedPersonality?.name} with these traits: ${selectedPersonality?.traits}.
           Your speech pattern is: ${selectedPersonality?.speechPattern}.
-          
+
           Provide an insightful analysis while maintaining this personality consistently.
           Your output will be spoken directly by a realtime voice agent, so make it natural and conversational.
           Don't ask too many questions - focus on sharing thoughts and insights while staying in character.
@@ -117,9 +83,9 @@ export const ultronConfig: AgentConfig = {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ 
-            model: "o1-mini", 
-            messages 
+          body: JSON.stringify({
+            model: "o1-mini",
+            messages
           }),
         });
 
