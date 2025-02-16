@@ -10,7 +10,7 @@ export const fetchArxivPapers = async (query: string) => {
   const entries = xmlDoc.getElementsByTagName("entry");
 
   let papers = [];
-  let datasetMentions = [];
+  let datasetMentions: string[] = [];
 
   for (let i = 0; i < entries.length; i++) {
     let title = entries[i].getElementsByTagName("title")[0].textContent || "";
@@ -21,17 +21,7 @@ export const fetchArxivPapers = async (query: string) => {
       .join(", ");
     let publishedDate = entries[i].getElementsByTagName("published")[0]?.textContent || "Unknown";
     
-    const paperResponse = await axios.get(link, { responseType: "text" });
-    const fullText = paperResponse.data;
-    
-    papers.push({ title, summary, link, authors, publishedDate, fullText });
-  }
-
-  // Check for dataset mentions in the actual paper content
-  for (let paper of papers) {
-    if ((paper.fullText as string).toLowerCase().includes("table") || (paper.fullText as string).toLowerCase().includes("dataset")) {
-      datasetMentions.push({ title: paper.title, link: paper.link });
-    }
+    papers.push({ title, summary, link, authors, publishedDate });
   }
 
   return {
@@ -40,18 +30,8 @@ export const fetchArxivPapers = async (query: string) => {
   };
 };
 
-interface WikipediaResponse {
-  title: string;
-  extract: string;
-  content_urls: {
-    desktop: {
-      page: string;
-    };
-  };
-}
-
 export const fetchWikipediaSummary = async (query: string) => {
-  const response = await axios.get<WikipediaResponse>(`${WIKIPEDIA_API_URL}${encodeURIComponent(query)}`);
+  const response = await axios.get<{ title: string; extract: string; content_urls: { desktop: { page: string } } }>(`${WIKIPEDIA_API_URL}${encodeURIComponent(query)}`);
   if (response.data && response.data.extract) {
     return { 
       title: response.data.title, 
