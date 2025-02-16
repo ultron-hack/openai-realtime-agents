@@ -5,7 +5,7 @@ const WIKIPEDIA_API_URL = "https://en.wikipedia.org/api/rest_v1/page/summary/";
 
 export const fetchArxivPapers = async (query: string) => {
   try {
-    const response = await axios.get(`${ARXIV_API_URL}${encodeURIComponent(query)}&max_results=10`);
+    const response = await axios.get(`${ARXIV_API_URL}${encodeURIComponent(query)}&max_results=100000`);
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(response.data as string, "text/xml");
     const entries = xmlDoc.getElementsByTagName("entry");
