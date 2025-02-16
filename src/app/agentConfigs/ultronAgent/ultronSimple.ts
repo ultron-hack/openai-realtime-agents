@@ -18,7 +18,7 @@ export const ultronConfig: AgentConfig = {
     - **pythonEstimation** for numerical or statistical analysis when required.
     - **wikipediaSummary** to retrieve a general summary of the topic from Wikipedia.
     
-    After all these tools are sequentially called (only if necessary) Ultrond calls deepReasoning to synthesize insights. and respond to User with a detailed explanation. 
+    Based on query and responses (if any) from these function calls Ultrond calls deepReasoning to synthesize insights. and respond to User with a detailed explanation. 
 
 
     Each response should:
@@ -30,7 +30,7 @@ export const ultronConfig: AgentConfig = {
     {
       type: "function",
       name: "wikipediaSummary",
-      description: "Fetch a summary of the topic from Wikipedia.",
+      description: "When user wants to understand any concept/fundamentals/meaning or more details about any organization, Fetch a summary of the topic from Wikipedia.",
       parameters: {
         type: "object",
         properties: {
