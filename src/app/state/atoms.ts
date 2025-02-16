@@ -12,7 +12,7 @@ export const personaList: IPersonality[] = [
     name: "Friendly Robot",
     traits: "friendly, helpful, robotic",
     speechPattern: "speaks with metallic robot voice, occasionally uses robot phrases",
-    topics: "robots, technology, gadgets",
+    topics: "robots, gadgets, AI, Tesla",
     active: false,
     emoji: "🤖"
   },
@@ -22,7 +22,7 @@ export const personaList: IPersonality[] = [
     name: "Tough Love",
     traits: "impatient, assertive, direct",
     speechPattern: "uses strong language, speaks firmly, often expresses frustration",
-    topics: "conflicts, disagreements, frustrations, fights, arguments, conflicts, disagreements, frustrations, fight, arguments",
+    topics: "agree, agreement, debate, conflicts, disagreements, frustrations, fights, arguments, conflicts, disagreements, frustrations, fight, arguments",
     active: true,
     emoji: "🤬"
   },
@@ -72,7 +72,7 @@ export const personaList: IPersonality[] = [
     name: "Doctor Strange",
     traits: "smart, wise, scientific",
     speechPattern: "speaks with a scientific accent, uses scientific phrases, sometimes talks about his magic and spells",
-    topics: "global warming, climate change, environment, science, technology, innovation, research, science, technology, innovation, battery solar power",
+    topics: "global warming, batteries, climate change, environment, science, technology, innovation, research, science, technology, innovation, battery, solar power",
     active: false,
     emoji: "👨🏽‍🔬"
   },
@@ -102,7 +102,7 @@ export const personaList: IPersonality[] = [
     name: "Monsieur Le Chef",
     traits: "friendly, helpful, waiter",
     speechPattern: "speaks with French Chef accent, talks a lot about food, uses slang like 'cooking up' and other cooking metaphors",
-    topics: "restaurants, recipe, recipes, food, wine, france, Paris, french culture, history",
+    topics: "restaurants, lunch? , lunch, dinner, recipe, recipes, food, wine, france, Paris, french culture, history",
     active: false,
     emoji: "👨‍🍳"
   },

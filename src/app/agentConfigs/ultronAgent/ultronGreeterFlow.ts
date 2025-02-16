@@ -19,4 +19,5 @@ and then transfer them to the 'ultron' agent.`,
 };
 
 // add the transfer tool to point to downstreamAgents
-export const ultronGreeterFlow = injectTransferTools([greeter, ultronConfig]);
+// export const ultronGreeterFlow = injectTransferTools([greeter, ultronConfig]);
+export const ultronGreeterFlow = injectTransferTools([ultronConfig]);
