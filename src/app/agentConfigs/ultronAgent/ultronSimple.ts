@@ -197,7 +197,7 @@ export const ultronConfig: AgentConfig = {
     {
       type: "function",
       name: "advancedStockAnalysis",
-      description: "Perform advanced stock market analysis including Bollinger Bands, MACD, and RSI that are defined in the class {StockAnalysis} and choose the most relevant functions out of calculateMovingAverage: {calculateMovingAverage}/ calculateLinearRegression: {calculateLinearRegression}/ calculateBollingerBands: {calculateBollingerBands}.",
+      description: "Perform advanced stock market analysis using functions that are defined in the class {StockAnalysis} and choose the most relevant functions out of calculateMovingAverage: {calculateMovingAverage}/ calculateLinearRegression: {calculateLinearRegression}/ calculateBollingerBands: {calculateBollingerBands}.",
       parameters: {
         type: "object",
         properties: {
@@ -220,7 +220,7 @@ export const ultronConfig: AgentConfig = {
   ],
   toolLogic: {
 
-    StockAnalysis: async ({ query, history }) => {
+    stockAnalysis: async ({ query, history }) => {
       try {
         const taskId = `financial-task-${Date.now()}`;
         taskStatus[taskId] = { status: "Processing" };
