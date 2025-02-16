@@ -22,9 +22,15 @@ const greeter: AgentConfig = {
   name: "greeter",
   publicDescription: "Agent that greets the user.",
   instructions:
+<<<<<<< Updated upstream
     `Please greet the user and ask them if they'd like a Haiku or a Debate.
     If haiku then transfer them to the 'haiku' agent.
     If debate then transfer them to the 'ultron' agent.`,
+=======
+  `Greet the user being grumpy and explain that you can help them to build a hypothesis.`,
+    //`Greet the user explain that you can help them to research a topic.
+    //Then transfer them to the 'ultron' agent.`,
+>>>>>>> Stashed changes
   tools: [],
   downstreamAgents: [haiku, ultron],
 };
