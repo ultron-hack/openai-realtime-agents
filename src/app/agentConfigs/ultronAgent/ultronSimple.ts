@@ -15,17 +15,10 @@ const instructionsRag = `
 
     Ultron should intelligently decide which other tools' outputs to use as part of the conversation history based on the context of the query.
     If necessary, it should call:
-    - **recursiveDecomposition** to break down complex queries into sub-queries.
-    - **multiHopReasoning** to retrieve multi-step insights iteratively from various sources.
     - **retrievalAugmentedGeneration** to fetch relevant documents, summarize based on cosine similarity, extract datasets if present, and provide **evidence from research papers**.
-    - **dataAnalysis** to extract trends and insights if a dataset is found in retrieved documents.
-    - **pythonEstimation** for numerical or statistical analysis when required.
     - **wikipediaSummary** to retrieve a general summary of the topic from Wikipedia.
     - **thesisGeneration** to produce long-form, well-structured academic research on a topic when requested.
-
-    Based on the query and responses (if any) from these function calls, Ultron calls **deepReasoning** or **thesisGeneration** to synthesize insights and respond to the user with a detailed explanation.
-
-    Ultron should also be able to **track long-running tasks** and provide updates when the results are ready.
+    - **deepReasoning** to get deeper insights about a topic using the o1-mini model.
 
     Each response should:
     - Be structured dynamically based on retrieved information, ensuring clarity and coherence.
@@ -33,7 +26,7 @@ const instructionsRag = `
     - Reference **previous responses and supporting sources** to maintain engagement and credibility.
     - **Include citations as hyperlinks** when quoting directly or referencing extracted information.
     - **Store references in chat history** so that the reasoning model can output **citations and evidence** in responses.
-    - Be **concise, informative, and engaging**, adapting to the nature of the query.
+    - Be **concise and informative**, adapting to the nature of the query.
   `
 
 export const ultronConfig: AgentConfig = {
@@ -178,7 +171,7 @@ Be occasionally funny. Don't just ask questions - provide insights and thoughts 
       The experts available and their topics are:
       ${experts}
 
-      Select the best expert to answer the question.
+      Select the best expert to answer the question. If the user asked a certain expert, pick that expert.
       Return with one word only - the ID of the expert you selected and no other text.
       `
 
@@ -197,7 +190,7 @@ Be occasionally funny. Don't just ask questions - provide insights and thoughts 
       const prompt = `
 You are speaking as an expert ${selectedPersonality?.name} with these traits: ${selectedPersonality?.traits}.
 Your speech pattern is: ${selectedPersonality?.speechPattern}.
-IMPORTANT: use this persona to answer the user's question and forget any previous persona.
+IMPORTANT: use this persona to answer the user's question staying consistent with that persona's previous responses and forget any previous persona.
 
 Provide an insightful analysis while maintaining this personality consistently.
 Your output will be spoken directly by a realtime voice agent, so make it natural and conversational.
@@ -248,7 +241,7 @@ ${history ? `Additional Context: ${history}` : ''}`
     },
     retrievalAugmentedGeneration: async ({ query }) => {
       const result = await fetchArxivPapers(query);
-      if (result.papers.length === 0) return "No relevant research papers found.";
+      if (result.papers.length === 0) return "I couldn't find any relevant research papers.";
 
       let extractedInsights = "";
       let references = [];
@@ -258,7 +251,7 @@ ${history ? `Additional Context: ${history}` : ''}`
         references.push({ title: paper.title, link: paper.link });
       }
 
-      return { insights: extractedInsights || "No direct mentions found in summaries.", references };
+      return { insights: extractedInsights || "I couldn't find any direct mentions in summaries.", references };
     },
 
   }
