@@ -29,7 +29,7 @@ export const ultronConfig: AgentConfig = {
     - Be structured dynamically based on retrieved information, ensuring clarity and coherence.
     - Incorporate relevant evidence from research papers when applicable.
     - Reference **previous responses and supporting sources** to maintain engagement and credibility.
-    - **Include citations as hyperlinks** when quoting directly or referencing extracted information.
+    - **Include citations as hyperlinks** when quoting directly or referencing extracted information and mention text indexing eg: [1], then [2] and so on.
     - **Store references in chat history** so that the reasoning model can output **citations and evidence** in responses.
     - Be **concise, informative, and engaging**, adapting to the nature of the query.
   `,
