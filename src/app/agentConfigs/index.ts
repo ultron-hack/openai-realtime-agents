@@ -1,15 +1,13 @@
 import { AllAgentConfigsType } from "@/app/types";
-import frontDeskAuthentication from "./frontDeskAuthentication";
-import customerServiceRetail from "./customerServiceRetail";
-import simpleExample from "./simpleExample";
-
-import { ultronFlow } from "./ultronAgent/ultronSimple";
+import { ultronConfig } from "./ultronAgent/ultronConfig";
+import { ultronGreeterFlow } from "./ultronAgent/ultronGreeterFlow";
 
 export const allAgentSets: AllAgentConfigsType = {
-  ultronFlow,
+  ultronGreeterFlow,
+  // ultronConfig,
   // frontDeskAuthentication,
   // customerServiceRetail,
   // simpleExample,
 };
 
-export const defaultAgentSetKey = "ultronFlow";
+export const defaultAgentSetKey = "ultronGreeterFlow";

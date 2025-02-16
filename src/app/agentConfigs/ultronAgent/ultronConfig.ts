@@ -246,6 +246,7 @@ ${history ? `Additional Context: ${history}` : ''}`
       const result = await fetchWikipediaSummary(query);
       return result.summary || "No Wikipedia summary available.";
     },
+
     retrievalAugmentedGeneration: async ({ query }) => {
       const result = await fetchArxivPapers(query);
       if (result.papers.length === 0) return "No relevant research papers found.";
@@ -264,4 +265,4 @@ ${history ? `Additional Context: ${history}` : ''}`
   }
 };
 
-export const ultronFlow = injectTransferTools([ultronConfig]);
+// export const ultronFlow = injectTransferTools([ultronConfig]);
