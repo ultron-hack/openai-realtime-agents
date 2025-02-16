@@ -115,7 +115,7 @@ export const ultronConfig: AgentConfig = {
       let extractedInsights = "";
       let references = [];
       for (const paper of result.papers) {
-        if (paper.fullText.toLowerCase().includes(query.toLowerCase())) {
+        if (typeof paper.fullText === 'string' && paper.fullText.toLowerCase().includes(query.toLowerCase())) {
           extractedInsights += `\n- **${paper.title}** ([source](${paper.link}))\n\n`;
           extractedInsights += `\"${paper.summary}\"\n\n`;
           references.push({ title: paper.title, link: paper.link });
