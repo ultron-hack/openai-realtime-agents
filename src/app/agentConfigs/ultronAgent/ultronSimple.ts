@@ -19,7 +19,7 @@ export const ultronConfig: AgentConfig = {
     
     
 
-    If financial query not detected: non-financial query
+    If financial query not detected (non-financial query):
 
     Ultron should intelligently decide which other tools' outputs to use as part of the conversation history based on the context of the query.
     If necessary, it should call:
@@ -32,7 +32,8 @@ export const ultronConfig: AgentConfig = {
     - **thesisGeneration** to produce long-form, well-structured academic research on a topic when requested.
 
 
-    If financial query is detected: financial query
+    If financial query is detected (financial query):
+    **IMPORTANT REMINDER**:
     Before running any financial analysis functions, Ultron will:
     - **Prompt the user** that it has access to financial market data.
     - **Ask the user for permission** to either provide **financial insights** or **run stock analysis**.
@@ -173,7 +174,7 @@ export const ultronConfig: AgentConfig = {
     {
       type: "function",
       name: "stockAnalysis",
-      description: "Analyze stock market trends using moving averages and regression analysis from the class {StockAnalysis}.",
+      description: "Analyze stock market trends using the class {StockAnalysis} and choose the most relevant functions out of calculateMovingAverage: {calculateMovingAverage}/ calculateLinearRegression: {calculateLinearRegression}/ calculateBollingerBands: {calculateBollingerBands}.",
       parameters: {
         type: "object",
         properties: {
@@ -218,6 +219,48 @@ export const ultronConfig: AgentConfig = {
     }
   ],
   toolLogic: {
+
+    StockAnalysis: async ({ query, history }) => {
+      try {
+        const taskId = `financial-task-${Date.now()}`;
+        taskStatus[taskId] = { status: "Processing" };
+        
+        const response = await fetch("/api/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "o1-mini",
+            messages: [{
+              role: "user",
+              content: `Perform a deep financial analysis using a dedicated agent for: ${query}. ${history ? `Context: ${history}` : ''},
+              available functions class: {StockAnalysis}
+              `
+            }]
+          })
+        });
+        
+        if (!response.ok) {
+          console.warn("Server returned an error:", response);
+          taskStatus[taskId].status = "Failed";
+          return { error: "Failed to get deeper financial insights." };
+        }
+
+        const completion = await response.json();
+        taskStatus[taskId] = { status: "Completed", result: completion.choices[0].message.content };
+        return { result: completion.choices[0].message.content };
+      } catch (error) {
+        console.error("Error calling financial swarm agent:", error);
+        return { error: "Failed to process the financial swarm analysis request." };
+      }
+    },
+
+    checkFinancialTaskStatus: async ({ taskId }) => {
+      if (taskStatus[taskId]) {
+        return taskStatus[taskId];
+      } else {
+        return { error: "Task not found." };
+      }
+    },
     wikipediaSummary: async ({ query }) => {
       const result = await fetchWikipediaSummary(query);
       return result.summary || "No Wikipedia summary available.";
