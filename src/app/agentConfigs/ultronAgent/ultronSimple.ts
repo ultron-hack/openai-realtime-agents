@@ -1,4 +1,4 @@
-import { AgentConfig } from "@/app/types";
+import { AgentConfig, IPersonality } from "@/app/types";
 import { injectTransferTools } from "../utils";
 import FormData from "form-data";
 
@@ -30,56 +30,19 @@ async function sendWaitingMessage(): Promise<void> {
   const waitingMessage = "Please wait, I'm reasoning through your hypothesis...";
   console.log("[Chat] System:", waitingMessage);
 }
+import _ from "lodash";
+import { getPersona, personaList, setPersona } from "@/app/state/atoms";
 
-type Personality = {
-  id: string;
-  name: string;
-  traits: string;
-  speechPattern: string;
-};
-
-const personalities: Personality[] = [
-  {
-    id: "american_woman",
-    name: "American Woman",
-    traits: "patient, understanding, nurturing",
-    speechPattern: "uses American slang"
-  },
-  {
-    id: "australian_woman",
-    name: "Australian Woman",
-    traits: "laid-back, friendly, outgoing",
-    speechPattern: "uses Australian slang"
-  },
-  {
-    id: "indian_woman",
-    name: "Indian Woman",
-    traits: "warm, friendly, traditional",
-    speechPattern: "speaks with Indian accent, occasionally uses Indian phrases"
-  },
-  {
-    id: "chinese_woman",
-    name: "Chinese Woman",
-    traits: "respectful, wise, traditional",
-    speechPattern: "speaks with Chinese accent, occasionally uses Chinese phrases"
-  },
-  {
-    id: "egyptian_woman",
-    name: "Egyptian Woman",
-    traits: "warm, friendly, traditional",
-    speechPattern: "speaks with Egyptian accent, occasionally uses Egyptian phrases"
-  }
-];
 
 // Helper to get a random personality.
-const getRandomPersonality = (): Personality =>
-  personalities[Math.floor(Math.random() * personalities.length)];
+const getRandomPersonality = (): IPersonality =>
+  personaList[Math.floor(Math.random() * personaList.length)];
 
 // Helper to get a random personality excluding a specified ID.
-const getRandomPersonalityExcluding = (excludeId: string): Personality => {
+const getRandomPersonalityExcluding = (excludeId: string): IPersonality => {
   let candidate = getRandomPersonality();
   // To prevent the unlikely event that the same personality is chosen repeatedly.
-  while (candidate.id === excludeId && personalities.length > 1) {
+  while (candidate.id === excludeId && personaList.length > 1) {
     candidate = getRandomPersonality();
   }
   return candidate;
@@ -140,8 +103,12 @@ The agent is not to stray from this objective.`,
     selectPersonality: async () => {
       // Use the helper to get a random personality.
       const randomPersonality = getRandomPersonality();
+      const randomPersona = _.sample(personaList)
       // TODO: Modify the shown person on the screen.
-      return { result: randomPersonality };
+      if (randomPersona) {
+        setPersona(randomPersona)
+      }
+      return { result: randomPersona };
     },
     deepReasoning: async ({ topic, history, personality, context }) => {
       // Normalize context for case-insensitive checking.
@@ -156,7 +123,7 @@ The agent is not to stray from this objective.`,
       }
       
       // Use the updated personality for the rest of the response.
-      const selectedPersonality = personalities.find(p => p.id === personality) || getRandomPersonality();
+      const selectedPersonality = personaList.find(p => p.id === personality) || getRandomPersonality();
       
       let hypothesis = topic;
       if (topic.toLowerCase().startsWith("audio:")) {
@@ -180,7 +147,7 @@ The agent is not to stray from this objective.`,
           "Keep your answer friendly, strictly on topic, and under 400 characters as per the instructions.]";
       }
     
-      const messages = [
+      const messages: { role: string; content: string }[] = [
         {
           role: "user",
           content: `As an expert with unique insights, please consider:
@@ -211,6 +178,27 @@ Respond in a friendly, human-like manner (under 400 characters).`
           console.error("Network error:", error);
           throw new Error("Failed to process the reasoning request.");
         }
+        const response = await fetch("/api/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "o1-mini",
+            messages
+          }),
+        });
+
+        if (!response.ok) {
+          console.warn("Server returned an error:", response);
+          return { error: "Failed to get deeper insights." };
+        }
+
+        const completion = await response.json();
+        const text = completion.choices[0].message.content
+        const output = `${selectedPersonality?.emoji} [${selectedPersonality?.name}] ${text}`
+        console.log("result", output)
+        return output;
       } catch (error) {
         console.error("Error calling o1-mini:", error);
         if (error instanceof Error) {
