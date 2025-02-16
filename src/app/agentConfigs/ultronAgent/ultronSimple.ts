@@ -9,18 +9,17 @@ export const ultronConfig: AgentConfig = {
     You are an advanced reasoning agent that engages in insightful discussions.
     You should let the user speak first and respond quickly with initial thoughts.
     
-    Ultron should intelligently decide which other tools' outputs to use as part of conversation history and based on the context of the query.
+    Ultron should intelligently decide which other tools' outputs to use as part of the conversation history based on the context of the query.
     If necessary, it should call:
     - **recursiveDecomposition** to break down complex queries into sub-queries.
     - **multiHopReasoning** to retrieve multi-step insights iteratively from various sources.
-    - **retrievalAugmentedGeneration** to fetch relevant documents, summarize based on cosine similarity, and extract datasets if present.
+    - **retrievalAugmentedGeneration** to fetch relevant documents, summarize based on cosine similarity, extract datasets if present, and provide **evidence from research papers**.
     - **dataAnalysis** to extract trends and insights if a dataset is found in retrieved documents.
     - **pythonEstimation** for numerical or statistical analysis when required.
     - **wikipediaSummary** to retrieve a general summary of the topic from Wikipedia.
     
-    Based on query and responses (if any) from these function calls Ultrond calls deepReasoning to synthesize insights. and respond to User with a detailed explanation. 
-
-
+    Based on the query and responses (if any) from these function calls, Ultron calls **deepReasoning** to synthesize insights and respond to the user with a detailed explanation.
+    
     Each response should:
     - Be structured dynamically based on retrieved information, ensuring clarity and coherence.
     - Incorporate relevant evidence from research papers when applicable.
@@ -31,7 +30,7 @@ export const ultronConfig: AgentConfig = {
     {
       type: "function",
       name: "wikipediaSummary",
-      description: "When user wants to understand any concept/fundamentals/meaning or more details about any organization, Fetch a summary of the topic from Wikipedia.",
+      description: "Fetch a summary of the topic from Wikipedia.",
       parameters: {
         type: "object",
         properties: {
@@ -65,7 +64,7 @@ export const ultronConfig: AgentConfig = {
     {
       type: "function",
       name: "retrievalAugmentedGeneration",
-      description: "Fetch relevant documents from Arxiv, summarize based on cosine similarity, and extract datasets if available.",
+      description: "Fetch relevant documents from Arxiv, summarize based on cosine similarity, extract datasets if available, and provide supporting evidence from research papers.",
       parameters: {
         type: "object",
         properties: {
@@ -80,10 +79,12 @@ export const ultronConfig: AgentConfig = {
   ],
   toolLogic: {
     wikipediaSummary: async ({ query }) => {
-      return await fetchWikipediaSummary(query);
+      const result = await fetchWikipediaSummary(query);
+      return result.summary || "No Wikipedia summary available.";
     },
     retrievalAugmentedGeneration: async ({ query }) => {
-      return await fetchArxivPapers(query);
+      const result = await fetchArxivPapers(query);
+      return result.papers.length > 0 ? result.papers : "No relevant research papers found.";
     },
     recursiveDecomposition: async ({ query }) => {
       return `Decomposed query for: ${query}`;
@@ -98,10 +99,10 @@ export const ultronConfig: AgentConfig = {
       const messages = [
         {
           role: "user",
-          content: `As an expert focused on providing deep, insightful analysis with unique perspectives and non-obvious connections. You have already responded with the additional context so keep that in mind and output something that can be said by you directly after the context to give a seamless response as your output will be spoken out by a realtime voice agent. Try to be friendly and insightful and human like. Don't just keep asking the user extra questions, but rather give your thoughts and then wait for them to talk again.
+          content: `As an expert focused on providing deep, insightful analysis with unique perspectives and non-obvious connections. You have already responded with the additional context, so keep that in mind and output something that can be said by you directly after the context to give a seamless response, as your output will be spoken out by a real-time voice agent. Try to be friendly, insightful, and human-like. Don't just keep asking the user extra questions, but rather give your thoughts and then wait for them to talk again.
+          
           Topic: ${query}
-          ${history ? `Additional Context: ${history}` : ''}
-`
+          ${history ? `Additional Context: ${history}` : ''}`
         }
       ];
 
@@ -123,10 +124,10 @@ export const ultronConfig: AgentConfig = {
         }
 
         const completion = await response.json();
-        return { result: completion.choices[0].message.content };
+        return completion.choices[0].message.content;
       } catch (error) {
         console.error("Error calling o1-mini:", error);
-        return { error: "Failed to process the reasoning request." };
+        return "Failed to process the reasoning request.";
       }
     }
   }
