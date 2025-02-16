@@ -26,10 +26,6 @@ import { createRealtimeConnection } from "./lib/realtimeConnection";
 import { allAgentSets, defaultAgentSetKey } from "@/app/agentConfigs";
 import { PersonalityBar } from "./components/PersonalityBar";
 
-interface AgentInfo {
-  name: string;
-  profile: string;
-}
 
 function App() {
   const searchParams = useSearchParams();

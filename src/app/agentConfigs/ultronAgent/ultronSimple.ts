@@ -1,7 +1,7 @@
 import { AgentConfig } from "@/app/types";
 import { injectTransferTools } from "../utils";
 import _ from "lodash";
-import { personaList, setPersona } from "@/app/state/atoms";
+import { getPersona, personaList, setPersona } from "@/app/state/atoms";
 
 
 export const ultronConfig: AgentConfig = {
@@ -61,7 +61,7 @@ export const ultronConfig: AgentConfig = {
       return { result: randomPersona };
     },
     deepReasoning: async ({ topic, history, personality }) => {
-      const selectedPersonality = personaList.find(p => p.id === personality);
+      const selectedPersonality = getPersona()
       const messages = [
         {
           role: "user",
@@ -95,7 +95,10 @@ export const ultronConfig: AgentConfig = {
         }
 
         const completion = await response.json();
-        return { result: completion.choices[0].message.content };
+        const text = completion.choices[0].message.content
+        const output = `${selectedPersonality?.emoji} [${selectedPersonality?.name}] ${text}`
+        console.log("result", output)
+        return output;
       } catch (error) {
         console.error("Error calling o1-mini:", error);
         return { error: "Failed to process the reasoning request." };
