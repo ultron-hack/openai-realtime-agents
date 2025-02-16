@@ -8,7 +8,7 @@ import { fetchWikipediaSummary, fetchArxivPapers } from "../services/retrievalSe
 const taskStatus: Record<string, { status: string; result?: string }> = {};
 
 
-
+// TODO merge these two prompts?
 const instructionsRag = `
     You are an advanced reasoning agent that engages in insightful discussions.
     You should let the user speak first and respond quickly with initial thoughts.
