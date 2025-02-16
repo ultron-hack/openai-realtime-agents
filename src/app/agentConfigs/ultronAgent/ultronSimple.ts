@@ -7,30 +7,87 @@ let isAgentSpeaking = false;
 
 // Instead of calling realtimeSpeechToText directly, use this wrapper that calls your server API.
 async function realtimeSpeechToTextAPI(audioFilePath: string): Promise<string> {
-  const response = await fetch("/api/stt", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ audioFilePath }),
-  });
-  if (!response.ok) {
-    console.warn("Speech-to-text API error:", response.statusText);
+  try {
+    const response = await fetch("/api/stt", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ audioFilePath }),
+    });
+    if (!response.ok) {
+      console.warn("Speech-to-text API error:", response.statusText);
+      return "";
+    }
+    const data = await response.json();
+    return data.transcript;
+  } catch (error) {
+    console.error("Network error:", error);
     return "";
   }
-  const data = await response.json();
-  return data.transcript;
 }
 
 // Helper: send a waiting message to simulate conversational chat.
 async function sendWaitingMessage(): Promise<void> {
   const waitingMessage = "Please wait, I'm reasoning through your hypothesis...";
   console.log("[Chat] System:", waitingMessage);
-  // Optionally, you can POST this waiting message to your realtime chat endpoint.
-  // await fetch('http://your-chat-endpoint/api/messages', { method: 'POST', body: JSON.stringify({ message: waitingMessage }) });
 }
+
+type Personality = {
+  id: string;
+  name: string;
+  traits: string;
+  speechPattern: string;
+};
+
+const personalities: Personality[] = [
+  {
+    id: "american_woman",
+    name: "American Woman",
+    traits: "patient, understanding, nurturing",
+    speechPattern: "uses American slang"
+  },
+  {
+    id: "australian_woman",
+    name: "Australian Woman",
+    traits: "laid-back, friendly, outgoing",
+    speechPattern: "uses Australian slang"
+  },
+  {
+    id: "indian_woman",
+    name: "Indian Woman",
+    traits: "warm, friendly, traditional",
+    speechPattern: "speaks with Indian accent, occasionally uses Indian phrases"
+  },
+  {
+    id: "chinese_woman",
+    name: "Chinese Woman",
+    traits: "respectful, wise, traditional",
+    speechPattern: "speaks with Chinese accent, occasionally uses Chinese phrases"
+  },
+  {
+    id: "egyptian_woman",
+    name: "Egyptian Woman",
+    traits: "warm, friendly, traditional",
+    speechPattern: "speaks with Egyptian accent, occasionally uses Egyptian phrases"
+  }
+];
+
+// Helper to get a random personality.
+const getRandomPersonality = (): Personality =>
+  personalities[Math.floor(Math.random() * personalities.length)];
+
+// Helper to get a random personality excluding a specified ID.
+const getRandomPersonalityExcluding = (excludeId: string): Personality => {
+  let candidate = getRandomPersonality();
+  // To prevent the unlikely event that the same personality is chosen repeatedly.
+  while (candidate.id === excludeId && personalities.length > 1) {
+    candidate = getRandomPersonality();
+  }
+  return candidate;
+};
 
 export const ultronConfig: AgentConfig = {
   name: "Ultron",
-  publicDescription: "Agent that helps to reason about topics.",
+  publicDescription: "Agent that helps to reason about topics with different personalities.",
   instructions:
     `**Instructions:**
 Read the following transcribed text of a scientific brainstorming session.
@@ -41,9 +98,20 @@ Identify statements that propose a potential scientific hypothesis. A hypothesis
   • Are phrased as questions that can be investigated scientifically.
 Extract these potential hypotheses as concise bullet points.
 If no clear hypotheses are found, state "No potential hypotheses identified in this text." And help the user build a hypothesis by asking leading questions.
-Keep your initial response under 400 characters. You say "Hey Hey Hey, how can I help you today?" to start the conversation. After the hypothesis is created call the function 'deepReasoning' with the hypothesis as the topic.
+Keep your initial response under 400 characters. You say "Hey Hey Hey, how can I help you today?" to start the conversation.
+After the hypothesis is created, call the function 'deepReasoning' with the hypothesis as the topic.
 The agent is not to stray from this objective.`,
   tools: [
+    {
+      type: "function",
+      name: "selectPersonality",
+      description: "Select a random personality for the conversation",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    },
     {
       type: "function",
       name: "deepReasoning",
@@ -58,21 +126,43 @@ The agent is not to stray from this objective.`,
           history: {
             type: "string",
             description: "The conversation history so far including your full response"
+          },
+          personality: {
+            type: "string",
+            description: "The current personality ID being used"
           }
         },
-        required: ["topic"]
+        required: ["topic", "personality"]
       }
     }
   ],
   toolLogic: {
-    deepReasoning: async ({ topic, context }) => {
+    selectPersonality: async () => {
+      // Use the helper to get a random personality.
+      const randomPersonality = getRandomPersonality();
+      // TODO: Modify the shown person on the screen.
+      return { result: randomPersonality };
+    },
+    deepReasoning: async ({ topic, history, personality, context }) => {
+      // Normalize context for case-insensitive checking.
+      const normalizedContext = context ? context.toLowerCase() : "";
+      
+      // If this is right after the initial greeting ("hey hey hey") then choose a new personality.
+      if (!personality || normalizedContext.includes("hey hey hey")) {
+        const newPersonality = personality 
+          ? getRandomPersonalityExcluding(personality)
+          : getRandomPersonality();
+        personality = newPersonality.id;
+      }
+      
+      // Use the updated personality for the rest of the response.
+      const selectedPersonality = personalities.find(p => p.id === personality) || getRandomPersonality();
+      
       let hypothesis = topic;
-
       if (topic.toLowerCase().startsWith("audio:")) {
         const audioFilePath = topic.slice("audio:".length).trim();
         const transcript = await realtimeSpeechToTextAPI(audioFilePath);
         console.log("[Debug] Transcript:", transcript);
-
         if (transcript.toLowerCase().includes("hypothesis:")) {
           hypothesis = transcript.substring(
             transcript.toLowerCase().indexOf("hypothesis:") + "hypothesis:".length
@@ -82,55 +172,57 @@ The agent is not to stray from this objective.`,
         }
         await sendWaitingMessage();
       }
-
-      // Update the voice directive to match the instructions.
-      const voiceDirective = (context && context.includes("Hey hey hey"))
-        ? "\n\n[Voice Directive: Please respond using the 'echo' voice. Keep your answer friendly, strictly on topic, and under 400 characters as per the instructions.]"
-        : "";
-
+    
+      let voiceDirective = "";
+      if (normalizedContext.includes("hey hey hey")) {
+        voiceDirective = "\n\n[Voice Directive: " +
+          `Speak as a ${selectedPersonality.name} (${selectedPersonality.traits}). ` +
+          "Keep your answer friendly, strictly on topic, and under 400 characters as per the instructions.]";
+      }
+    
       const messages = [
         {
           role: "user",
           content: `As an expert with unique insights, please consider:
 Topic/Hypothesis: ${hypothesis}
-${context ? `Additional Context: ${context}` : ""}${voiceDirective}
+${history ? `Additional Context: ${history}` : ""}${voiceDirective}
 Respond in a friendly, human-like manner (under 400 characters).`
         }
       ];
-
-      // Ensure only one agent speaks at a time.
+    
       while (isAgentSpeaking) {
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
       isAgentSpeaking = true;
       try {
-        const response = await fetch("/api/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ 
-            model: "o1-mini", 
-            messages 
-          }),
-        });
-
-        if (!response.ok) {
-          console.warn("Server returned an error:", response);
-          return { error: "Failed to get deeper insights." };
+        try {
+          const response = await fetch("/api/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ model: "o1-mini", messages })
+          });
+          if (!response.ok) {
+            console.warn("Server returned an error:", response);
+            throw new Error("Failed to get deeper insights.");
+          }
+          const completion = await response.json();
+          console.warn("Server returned an error:", response.statusText);
+        } catch (error) {
+          console.error("Network error:", error);
+          throw new Error("Failed to process the reasoning request.");
         }
-
-        const completion = await response.json();
-        return { result: completion.choices[0].message.content };
       } catch (error) {
         console.error("Error calling o1-mini:", error);
-        return { error: "Failed to process the reasoning request." };
+        if (error instanceof Error) {
+          return { error: error.message };
+        } else {
+          return { error: String(error) };
+        }
       } finally {
         isAgentSpeaking = false;
       }
     }
-  },
+  }
 };
 
-// add the transfer tool to point to downstreamAgents
 export const ultronFlow = injectTransferTools([ultronConfig]);
