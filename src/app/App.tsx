@@ -25,7 +25,6 @@ import { createRealtimeConnection } from "./lib/realtimeConnection";
 // Agent configs
 import { allAgentSets, defaultAgentSetKey } from "@/app/agentConfigs";
 import { PersonalityBar } from "./components/PersonalityBar";
-import { usePersonality } from "./contexts/PersonalityContext";
 
 interface AgentInfo {
   name: string;
@@ -35,7 +34,6 @@ interface AgentInfo {
 function App() {
   const searchParams = useSearchParams();
 
-  const { personality, setPersonality } = usePersonality();
 
   const { transcriptItems, addTranscriptMessage, addTranscriptBreadcrumb } =
     useTranscript();
@@ -421,7 +419,7 @@ function App() {
       <div className="p-5 text-lg font-semibold flex justify-between items-center">
         <div className="flex items-center">
           <div onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
-            <PersonalityBar who={personality} />
+            <PersonalityBar />
           </div>
         </div>
         <div className="flex items-center">
