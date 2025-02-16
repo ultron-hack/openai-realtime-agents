@@ -22,9 +22,10 @@ export const ultronConfig: AgentConfig = {
 
 
     Each response should:
-    - Be structured with **Key Insights, Hidden Connections, Implications, and Further Questions**.
-    - Reference **previous responses** for continuous engagement.
-    - Be engaging, insightful, and thought-provoking.
+    - Be structured dynamically based on retrieved information, ensuring clarity and coherence.
+    - Incorporate relevant evidence from research papers when applicable.
+    - Reference **previous responses and supporting sources** to maintain engagement and credibility.
+    - Be **concise, informative, and engaging**, adapting to the nature of the query.
   `,
   tools: [
     {
