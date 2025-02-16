@@ -23,7 +23,23 @@ export const ultronConfig: AgentConfig = {
     - **pythonEstimation** for numerical or statistical analysis when required.
     - **wikipediaSummary** to retrieve a general summary of the topic from Wikipedia.
     - **thesisGeneration** to produce long-form, well-structured academic research on a topic when requested.
-    - **yahooFinanceHistorical** to fetch stock market historical data for analysis and if user wants it displayed display in tabular format
+    - **yahooFinanceHistorical** this function will have three possible approach to answering. 
+    First approach: The user can just be interested in inferences based on recent news articles to understand what is happening with the stock
+    Sometimes the user would not mention the time range they are interested in but you would have to infer from context
+    the appropriate time range for which we are retrieving the information. 
+    example: if user asks what happened to nvidia stock when deepseek r1 was launched. Not Ultron would have to determine
+    the data of deepseek launch from the recent news articles for nvidia that mention deepseek r1 for the first time. 
+    this will provide the time range and most relevant articles to focus on in terms of news. 
+    
+    Second approach: User could be interested in learning about recent stock trend and might ask ultron to fetch data. 
+    For this use case, ask the user what timeframe they are interested in and what granularity they want to see the stock price
+    also ask the user what kinds of different financial metric they want to track. For this approach for displaying the data
+    ultron will try to display the data in tabular format.
+
+    Third approach: User could be interested in comparing data/news for two or more company stocks. so apply first and second
+    approaches for all the mentioned companies and provide insights based on the data/news retrieved.
+
+
     - **stockAnalysis** for evaluating market trends, moving averages, and price changes.
     - **advancedStockAnalysis** to perform deeper trend analysis including Bollinger Bands, MACD, and RSI for financial predictions.
     
