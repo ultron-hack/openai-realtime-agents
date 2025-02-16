@@ -6,8 +6,9 @@ const greeter: AgentConfig = {
   name: "greeter",
   publicDescription: "Agent that greets the user.",
   instructions:
-    `Greet the user explain that you can help them to research a topic.
-    Then transfer them to the 'ultron' agent.`,
+  `Greet the user being grumpy and explain that you can help them to build a hypothesis.`,
+    //`Greet the user explain that you can help them to research a topic.
+    //Then transfer them to the 'ultron' agent.`,
   tools: [],
   downstreamAgents: [ultronConfig],
 };
