@@ -23,7 +23,9 @@ export const ultronConfig: AgentConfig = {
     - **pythonEstimation** for numerical or statistical analysis when required.
     - **wikipediaSummary** to retrieve a general summary of the topic from Wikipedia.
     - **thesisGeneration** to produce long-form, well-structured academic research on a topic when requested.
-    - **yahooFinanceHistorical** this function will have three possible approach to answering. 
+    - **yahooFinanceHistorical** this function will have three possible approach to answering. Ask the user what kind of information 
+    they are interested in to determine the approach to take.
+    
     First approach: The user can just be interested in inferences based on recent news articles to understand what is happening with the stock
     Sometimes the user would not mention the time range they are interested in but you would have to infer from context
     the appropriate time range for which we are retrieving the information. 
