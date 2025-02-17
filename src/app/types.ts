@@ -107,17 +107,16 @@ export interface LoggedEvent {
   eventData: Record<string, any>; // can have arbitrary objects logged
 }
 
-
-export type IPersonality = {
+export interface IPersonality {
   id: string;
   name: string;
   traits: string;
   speechPattern: string;
-  topics?: string;
-  active?: boolean;
-  emoji?: string;
-};
-
+  topics: string;
+  active: boolean;
+  emoji: string;
+  imageUrl?: string; // Add this line
+}
 
 export type Message = {
   role: "user" | "assistant",

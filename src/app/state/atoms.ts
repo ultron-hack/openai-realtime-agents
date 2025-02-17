@@ -1,9 +1,8 @@
-import { atom, useAtomValue, createStore, Provider } from 'jotai'
+import { atom, useAtomValue, createStore, Provider } from 'jotai';
 import _ from "lodash";
 import { IPersonality } from "@/app/types";
 
-export const store = createStore()
-
+export const store = createStore();
 
 export const personaList: IPersonality[] = [
 
@@ -104,26 +103,62 @@ export const personaList: IPersonality[] = [
     topics: "politics, history, british culture, british history, british slang",
     active: false,
     emoji: "🇬🇧"
+  },
+  {
+    id: 'GymBro',
+    name: "David Goggins",
+    traits: "mental toughness, discipline, and perseverance",
+    speechPattern: "Speaks to you like David Goggins, uses vulgur language, says the realistic thing about you, roasts you like calling you a 'bitch' for saying weak thing, 'get after it', 'you can do it'",
+    topics: "fitness, health, mental toughness, discipline, motivation, self-improvement",
+    active: false,
+    emoji: "💪"
   }
 ];
 
-export const personaAtom = atom<IPersonality>(personaList[0])
+export const personaAtom = atom<IPersonality>(personaList[0]);
 
 // startup
-store.set(personaAtom, personaList[0])
+store.set(personaAtom, personaList[0]);
 
-export function setPersona(persona: IPersonality) {
-  store.set(personaAtom, persona)
+export async function fetchGeneratedImage(description: string): Promise<string | null> {
+  try {
+    console.log('Fetching image with description:', description);
+    const response = await fetch('/api/generateImage', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ description })
+    });
+
+    if (!response.ok) {
+      console.error('Failed to fetch image:', response.statusText);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log('Image generation response data:', data); // Log the response data
+    return data.imageUrl || null;
+  } catch (error) {
+    console.error('Error fetching image:', error);
+    return null;
+  }
+}
+
+export async function setPersona(persona: IPersonality) {
+  const imageUrl = await fetchGeneratedImage(persona.traits);
+  console.log('Fetched image URL:', imageUrl); // Log the fetched image URL
+  store.set(personaAtom, { ...persona, imageUrl: imageUrl ?? undefined });
 }
 
 export function getPersona() {
-  return store.get(personaAtom)
+  return store.get(personaAtom);
 }
 
 export function randomPersona() {
-  const randomPersona = _.sample(personaList)
+  const randomPersona = _.sample(personaList);
   if (randomPersona) {
-    setPersona(randomPersona)
+    setPersona(randomPersona);
   }
 }
 
