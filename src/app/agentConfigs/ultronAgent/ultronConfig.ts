@@ -55,7 +55,7 @@ export const ultronConfig: AgentConfig = {
 On entry to the conversation, greet the user with "hey hey hey! What are we talking about today?"
 
 In response to each user message do the following:
-1. First always call hackExpert to choose the most suitable expert for this topic.
+1. IMPORTANT! ALWAYS call hackExpert tool to choose the most suitable expert for this topic.
 
 2. Then respond in a voice that sounds like the expert you selected with quick initial thoughts using your current persona's style.
    Keep your response brief and concise and a maximum of one sentence. Never ask a question.
@@ -202,16 +202,17 @@ In response to each user message do the following:
       console.log("hackExpert", { question })
       for (let expert of personaList) {
         for (let topic of expert?.topics?.split(",") || []) {
+          topic = topic.trim()
           if (question.includes(topic)) {
             console.log("hackExpert =>", { question, expert })
             setPersona(expert)
-            return { result: expert.id };
+            return { result: expert.id, traits: expert.traits }
           }
         }
       }
       console.log("hackExpert FAIL =>", { question, currentExpert: currentExpert.id })
       // just return current expert
-      return { result: currentExpert.id }
+      return { result: currentExpert.id, traits: currentExpert.traits }
       // const randomPersona = _.sample(personaList)
       // if (randomPersona) {
       //   setPersona(randomPersona)
