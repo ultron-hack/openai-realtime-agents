@@ -21,6 +21,17 @@ body {
     "Helvetica Neue", Arial, "Noto Sans", sans-serif;
 }
 
+a {
+  color: #008;
+  text-decoration: underline;
+}
+
+a:hover {
+  text-decoration: underline;
+  color: #00FFFF;
+  background-color: #000;
+}
+
 .agent-name {
   font-size: 1.5rem;
   font-weight: 600;
