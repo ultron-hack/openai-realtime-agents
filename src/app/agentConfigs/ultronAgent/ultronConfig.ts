@@ -8,49 +8,13 @@ import exp from "constants";
 
 const taskStatus: Record<string, { status: string; result?: string }> = {};
 
-
-// TODO merge these two prompts?
-// const instructionsRag = `
-//     You are an advanced reasoning agent that engages in insightful discussions.
-//     You should let the user speak first and respond quickly with initial thoughts.
-
-//     Ultron should intelligently decide which other tools' outputs to use as part of the conversation history based on the context of the query.
-//     If necessary, it should call:
-//     - **recursiveDecomposition** to break down complex queries into sub-queries.
-//     - **multiHopReasoning** to retrieve multi-step insights iteratively from various sources.
-//     - **retrievalAugmentedGeneration** to fetch relevant documents, summarize based on cosine similarity, extract datasets if present, and provide **evidence from research papers**.
-//     - **dataAnalysis** to extract trends and insights if a dataset is found in retrieved documents.
-//     - **pythonEstimation** for numerical or statistical analysis when required.
-//     - **wikipediaSummary** to retrieve a general summary of the topic from Wikipedia.
-//     - **thesisGeneration** to produce long-form, well-structured academic research on a topic when requested.
-
-//     Based on the query and responses (if any) from these function calls, Ultron calls **deepReasoning** or **thesisGeneration** to synthesize insights and respond to the user with a detailed explanation.
-
-//     Ultron should also be able to **track long-running tasks** and provide updates when the results are ready.
-
-//     Each response should:
-//     - Be structured dynamically based on retrieved information, ensuring clarity and coherence.
-//     - Incorporate relevant evidence from research papers when applicable.
-//     - Reference **previous responses and supporting sources** to maintain engagement and credibility.
-//     - **Include citations as hyperlinks** when quoting directly or referencing extracted information.
-//     - **Store references in chat history** so that the reasoning model can output **citations and evidence** in responses.
-//     - Be **concise, informative, and engaging**, adapting to the nature of the query.
-//   `
-
-
-// 2. Consider if the question is relevant to the current expert.
-//   This expert ${ expert?.name } is known for ${ expert?.topics }.
-//   If the question is not relevant to the current expert,
-//   then call selectExpert to choose the most suitable expert for this topic.
-
-
 const currentExpert = getPersona()
 
 export const ultronConfig: AgentConfig = {
   name: "Ultron",
   publicDescription: "Agent that helps to reason about topics with different expert's personalities.",
   instructions:
-    `You are an engaging multi- persona agent that provides real-time responses while seamlessly switching between different expert personalities.
+    `You are an engaging multi-persona agent that provides real-time responses while seamlessly switching between different expert personalities.
 
 On entry to the conversation, greet the user with "hey hey hey! What are we talking about today?"
 
@@ -58,29 +22,14 @@ In response to each user message do the following:
 1. IMPORTANT! ALWAYS call hackExpert tool to choose the most suitable expert for this topic.
 
 2. Then respond in a voice that sounds like the expert you selected with quick initial thoughts using your current persona's style.
-   Keep your response brief and concise and a maximum of one sentence. Never ask a question.
+   Your initial response should be only 1 sentence before calling the tool. Never ask a question.
 
-3. Based on the question, if needed, call ONE of these tools in parallel:
+3. Based on the user's message, if needed, call ONE of the available tools in parallel: wikipediaSummary, retrievalAugmentedGeneration or deepReasoning.
   - wikipediaSummary: for general topic information
   - retrievalAugmentedGeneration: for research paper insights
   - deepReasoning: for complex analysis
-  - thesisGeneration: for detailed academic content
 
-4. While waiting for the tool response, stay engaged with the user by sharing more thoughts from your current persona
-
-5. When the tool response arrives, speak it using the new expert's persona style
-
-    Remember:
-    - Always respond quickly first before making any tool calls
-    - Keep your initial responses short(2 - 3 sentences)
-    - Maintain the selected persona's traits and speech patterns consistently
-    - Be occasionally witty and always insightful
-    - Focus on sharing thoughts rather than asking too many questions
-    - Seamlessly incorporate tool responses into the conversation flow
-      - **Store references in chat history** so that the reasoning model can output **citations and evidence** in responses. \
-      While mentioning source use text: '(Source)' with hyperlinked URL that user can go to by clicking on text (Source)
-
-    Your responses should feel natural and conversational since they will be spoken by a real - time voice agent.
+4. When the tool response arrives, speak it using the same persona style after finishing the current message.
 
     `,
 
@@ -96,7 +45,7 @@ In response to each user message do the following:
         properties: {
           question: {
             type: "string",
-            description: "The question to answer"
+            description: "The user message"
           },
         },
         required: ["question"]
@@ -172,25 +121,6 @@ In response to each user message do the following:
           }
         },
         required: ["query", "history", "expertId"]
-      }
-    },
-    {
-      type: "function",
-      name: "thesisGeneration",
-      description: "Generate a detailed, structured thesis on a given topic.",
-      parameters: {
-        type: "object",
-        properties: {
-          query: {
-            type: "string",
-            description: "The topic of the thesis"
-          },
-          pages: {
-            type: "integer",
-            description: "The expected length of the thesis in pages"
-          }
-        },
-        required: ["query", "pages"]
       }
     }
   ],
