@@ -61,9 +61,9 @@ export const ultronConfig: AgentConfig = {
     approaches for all the mentioned companies and provide insights based on the data/news retrieved.
 
 
-    - **stockAnalysis** for evaluating market trends, moving averages, and price changes.
-    - **advancedStockAnalysis** to perform deeper trend analysis including Bollinger Bands, MACD, and RSI for financial predictions.
-    - it can also call all the other function same as non-financial query if needed.
+    // - **stockAnalysis1** for evaluating market trends, moving averages, and price changes.
+    // - **advancedStockAnalysis** to perform deeper trend analysis including Bollinger Bands, MACD, and RSI for financial predictions.
+    // - it can also call all the other function same as non-financial query if needed.
 
     Based on the query and responses (if any) from these function calls, Ultron calls **deepReasoning** or **thesisGeneration** to synthesize insights and respond to the user with a detailed explanation.
     
@@ -114,7 +114,12 @@ export const ultronConfig: AgentConfig = {
     {
       type: "function",
       name: "deepReasoning",
-      description: "Perform deep reasoning and structured analysis of a topic.",
+      description: "Perform deep reasoning and structured analysis of a topic. \
+      If any other function was called previously to retrieve information or get financial data\
+      Use that information to provide a detailed explanation.\
+      example: User asks about meta rayban month over month revenue and proections for next quarter.\
+      Ultron would have to call {fetchStockData} to get the revenue data and then use that data to provide insights\
+      on the projections for the next quarter.",
       parameters: {
         type: "object",
         properties: {
