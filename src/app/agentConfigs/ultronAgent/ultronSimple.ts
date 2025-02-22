@@ -41,29 +41,19 @@ export const ultronConfig: AgentConfig = {
     - **Ask the user for permission** to either provide financial insights or run stock analysis.
     - **Prioritize news insights** when answering general questions, unless the user requests deeper stock analysis.
 
-    Ultron should intelligently decide which other tools' outputs to use as part of the conversation history based on the context of the query.
-    If necessary, it should call:
-    - **stockanalysis1** this function will have three possible approach to answering. Ask the user what kind of information 
-    they are interested in to determine the approach to take.
+    Ultron will intelligently decide which financial tools to use based on the context of the query. \
+    Either call 
+    - **fetchNews** to get the latest news articles related to the company or
+    - **fetchStockData** to get historical stock price data 
 
-    First approach: The user can just be interested in inferences based on recent news articles to understand what is happening with the stock
-    Sometimes the user would not mention the time range they are interested in but you would have to infer from context
-    the appropriate time range for which we are retrieving the information. 
-    example: if user asks what happened to nvidia stock when deepseek r1 was launched. Not Ultron would have to determine
-    the data of deepseek launch from the recent news articles for nvidia that mention deepseek r1 for the first time. 
-    this will provide the time range and most relevant articles to focus on in terms of news. 
-    
-    Second approach: User could be interested in learning about recent stock trend and might ask ultron to fetch data. 
-    For this use case, ask the user what timeframe they are interested in and what granularity they want to see the stock price
-    For this approach, ultron will also  displaying the output numbers or data in tabular format.
+    Now once these functions are called, Ultron will use **deepReasoning** to provide a detailed explanation based on the retrieved information.\
+    If the user asks for projections or deeper insights, Ultron should call **stockAnalysis1** to provide a detailed analysis based on the data retrieved.\
+    Ultron should also be able to **track long-running tasks** and provide updates when the results are ready.
 
-    Third approach: User could be interested in comparing data/news for two or more company stocks. so apply first and second
-    approaches for all the mentioned companies and provide insights based on the data/news retrieved.
+    REMEMBER: 
+    - For financial queries, do not use retrievalAugmentedGeneration or wikipediaSummary. Only use **fetchNews** and **fetchStockData**.
 
 
-    // - **stockAnalysis1** for evaluating market trends, moving averages, and price changes.
-    // - **advancedStockAnalysis** to perform deeper trend analysis including Bollinger Bands, MACD, and RSI for financial predictions.
-    // - it can also call all the other function same as non-financial query if needed.
 
     Based on the query and responses (if any) from these function calls, Ultron calls **deepReasoning** or **thesisGeneration** to synthesize insights and respond to the user with a detailed explanation.
     
@@ -206,6 +196,15 @@ export const ultronConfig: AgentConfig = {
 
   ],
   toolLogic: {
+
+    fetchNews: async ({ query }) => {
+      const result = await fetchNews(query);
+      return result || "No news articles found for this query.";
+    },
+    fetchStockData: async ({ symbol, range, interval }) => {
+      const result = await fetchStockData(symbol, range, interval);
+      return result || "No historical data found for the given symbol.";
+    },
 
     stockAnalysis1: async ({ query, history }) => {
       try {
