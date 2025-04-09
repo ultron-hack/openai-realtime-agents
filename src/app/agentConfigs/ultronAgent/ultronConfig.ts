@@ -3,11 +3,13 @@ import { injectTransferTools } from "../utils";
 import _ from "lodash";
 import { getPersona, personaList, setPersona } from "@/app/state/atoms";
 import { replyBot } from "@/app/services/getReply";
-import { fetchWikipediaSummary, fetchArxivPapers } from "../services/retrievalServices";
+import {
+  fetchWikipediaSummary,
+  fetchArxivPapers,
+} from "../services/retrievalServices";
 import exp from "constants";
 
 const taskStatus: Record<string, { status: string; result?: string }> = {};
-
 
 // TODO merge these two prompts?
 // const instructionsRag = `
@@ -37,20 +39,18 @@ const taskStatus: Record<string, { status: string; result?: string }> = {};
 //     - Be **concise, informative, and engaging**, adapting to the nature of the query.
 //   `
 
-
 // 2. Consider if the question is relevant to the current expert.
 //   This expert ${ expert?.name } is known for ${ expert?.topics }.
 //   If the question is not relevant to the current expert,
 //   then call selectExpert to choose the most suitable expert for this topic.
 
-
-const currentExpert = getPersona()
+const currentExpert = getPersona();
 
 export const ultronConfig: AgentConfig = {
   name: "Ultron",
-  publicDescription: "Agent that helps to reason about topics with different expert's personalities.",
-  instructions:
-    `You are an engaging multi- persona agent that provides real-time responses while seamlessly switching between different expert personalities.
+  publicDescription:
+    "Agent that helps to reason about topics with different expert's personalities.",
+  instructions: `You are an engaging multi- persona agent that provides real-time responses while seamlessly switching between different expert personalities.
 
 On entry to the conversation, greet the user with "hey hey hey! What are we talking about today?"
 
@@ -71,6 +71,7 @@ In response to each user message do the following:
 5. When the tool response arrives, speak it using the new expert's persona style
 
     Remember:
+    - Keep your responses short(1 - 2 sentences)
     - Always respond quickly first before making any tool calls
     - Keep your initial responses short(2 - 3 sentences)
     - Maintain the selected persona's traits and speech patterns consistently
@@ -85,38 +86,39 @@ In response to each user message do the following:
     `,
 
   tools: [
-
     // selectExpert is used to select the best expert to answer the user's question
     {
       type: "function",
       name: "hackExpert",
-      description: "Select the best expert to answer the user's question based on the question and the experts available",
+      description:
+        "Select the best expert to answer the user's question based on the question and the experts available",
       parameters: {
         type: "object",
         properties: {
           question: {
             type: "string",
-            description: "The question to answer"
+            description: "The question to answer",
           },
         },
-        required: ["question"]
-      }
+        required: ["question"],
+      },
     },
     // selectExpert is used to select the best expert to answer the user's question
     {
       type: "function",
       name: "selectExpert",
-      description: "Select the best expert to answer the user's question based on the question and the experts available",
+      description:
+        "Select the best expert to answer the user's question based on the question and the experts available",
       parameters: {
         type: "object",
         properties: {
           question: {
             type: "string",
-            description: "The question to answer"
+            description: "The question to answer",
           },
         },
-        required: ["question"]
-      }
+        required: ["question"],
+      },
     },
 
     // deepReasoning is used to get deeper insights about a topic using the o1-mini model
@@ -129,26 +131,27 @@ In response to each user message do the following:
         properties: {
           query: {
             type: "string",
-            description: "The topic to retrieve a summary for"
-          }
+            description: "The topic to retrieve a summary for",
+          },
         },
-        required: ["query"]
-      }
+        required: ["query"],
+      },
     },
     {
       type: "function",
       name: "retrievalAugmentedGeneration",
-      description: "Fetch relevant research papers, summarize findings, and provide references.",
+      description:
+        "Fetch relevant research papers, summarize findings, and provide references.",
       parameters: {
         type: "object",
         properties: {
           query: {
             type: "string",
-            description: "The research query to retrieve papers for"
-          }
+            description: "The research query to retrieve papers for",
+          },
         },
-        required: ["query"]
-      }
+        required: ["query"],
+      },
     },
     {
       type: "function",
@@ -160,19 +163,21 @@ In response to each user message do the following:
         properties: {
           query: {
             type: "string",
-            description: "The research query"
+            description: "The research query",
           },
           history: {
             type: "string",
-            description: "The conversation history so far including your full response"
+            description:
+              "The conversation history so far including your full response",
           },
           expertId: {
             type: "string",
-            description: "The ID of the current expert selected by the selectExpert tool"
-          }
+            description:
+              "The ID of the current expert selected by the selectExpert tool",
+          },
         },
-        required: ["query", "history", "expertId"]
-      }
+        required: ["query", "history", "expertId"],
+      },
     },
     {
       type: "function",
@@ -183,36 +188,38 @@ In response to each user message do the following:
         properties: {
           query: {
             type: "string",
-            description: "The topic of the thesis"
+            description: "The topic of the thesis",
           },
           pages: {
             type: "integer",
-            description: "The expected length of the thesis in pages"
-          }
+            description: "The expected length of the thesis in pages",
+          },
         },
-        required: ["query", "pages"]
-      }
-    }
+        required: ["query", "pages"],
+      },
+    },
   ],
 
   toolLogic: {
-
     hackExpert: async ({ question }) => {
       // find the expert based on the topic
-      console.log("hackExpert", { question })
+      console.log("hackExpert", { question });
       for (let expert of personaList) {
         for (let topic of expert?.topics?.split(",") || []) {
-          topic = topic.trim()
+          topic = topic.trim();
           if (question.includes(topic)) {
-            console.log("hackExpert =>", { question, expert })
-            setPersona(expert)
-            return { result: expert.id, traits: expert.traits }
+            console.log("hackExpert =>", { question, expert });
+            setPersona(expert);
+            return { result: expert.id, traits: expert.traits };
           }
         }
       }
-      console.log("hackExpert FAIL =>", { question, currentExpert: currentExpert.id })
+      console.log("hackExpert FAIL =>", {
+        question,
+        currentExpert: currentExpert.id,
+      });
       // just return current expert
-      return { result: currentExpert.id, traits: currentExpert.traits }
+      return { result: currentExpert.id, traits: currentExpert.traits };
       // const randomPersona = _.sample(personaList)
       // if (randomPersona) {
       //   setPersona(randomPersona)
@@ -222,9 +229,9 @@ In response to each user message do the following:
 
     // randomExpert is used to select a random expert
     randomExpert: async () => {
-      const randomPersona = _.sample(personaList)
+      const randomPersona = _.sample(personaList);
       if (randomPersona) {
-        setPersona(randomPersona)
+        setPersona(randomPersona);
       }
       return { result: "randomPersona" };
     },
@@ -232,7 +239,9 @@ In response to each user message do the following:
     selectExpert: async ({ question }) => {
       // const randomPersona = _.sample(personaList)
 
-      const experts = personaList.map(p => `ID: ${p.id} - name: ${p.name} - topics: ${p.topics}`).join("\n")
+      const experts = personaList
+        .map((p) => `ID: ${p.id} - name: ${p.name} - topics: ${p.topics}`)
+        .join("\n");
 
       const prompt = `
       You are a helpful message routing assistant that can select the best expert to answer the user's question.
@@ -244,22 +253,31 @@ In response to each user message do the following:
 
       Select the best expert to answer the question.
       Return with one word only - the ID of the expert you selected and no other text.
-      `
+      `;
 
-      const response = await replyBot.reply([{ role: "user", content: prompt }])
-      console.log("selectExpert", { question, response })
-      const selectedExpert = personaList.find(p => p.id === response)
+      const response = await replyBot.reply([
+        { role: "user", content: prompt },
+      ]);
+      console.log("selectExpert", { question, response });
+      const selectedExpert = personaList.find((p) => p.id === response);
       if (selectedExpert) {
-        setPersona(selectedExpert)
+        setPersona(selectedExpert);
       }
-      return { result: response }
+      return { result: response };
     },
 
     deepReasoning: async ({ topic, history, expertId }) => {
-      const selectedPersonality = getPersona()
-      console.log("deepReasoning", { topic, history, expertId, selectedPersonality })
+      const selectedPersonality = getPersona();
+      console.log("deepReasoning", {
+        topic,
+        history,
+        expertId,
+        selectedPersonality,
+      });
       const prompt = `
-You are speaking as an expert ${selectedPersonality?.name} with these traits: ${selectedPersonality?.traits}.
+You are speaking as an expert ${selectedPersonality?.name} with these traits: ${
+        selectedPersonality?.traits
+      }.
 Your speech pattern is: ${selectedPersonality?.speechPattern}.
 IMPORTANT: use this persona to answer the user's question and forget any previous persona.
 
@@ -269,13 +287,13 @@ Keep it short and concise.Don't use more than two sentences in your response.
 Don't ask too many questions - focus on sharing thoughts and insights while staying in character.
 
 Topic: ${topic}
-${history ? `Additional Context: ${history}` : ''}`
+${history ? `Additional Context: ${history}` : ""}`;
 
       const messages = [
         {
           role: "user",
-          content: prompt
-        }
+          content: prompt,
+        },
       ];
 
       try {
@@ -286,9 +304,9 @@ ${history ? `Additional Context: ${history}` : ''}`
           },
           body: JSON.stringify({
             model: "o1-mini",
-            messages
+            messages,
           }),
-        })
+        });
 
         if (!response.ok) {
           console.warn("Server returned an error:", response);
@@ -296,9 +314,9 @@ ${history ? `Additional Context: ${history}` : ''}`
         }
 
         const completion = await response.json();
-        const text = completion.choices[0].message.content
-        const output = `${selectedPersonality?.emoji} [${selectedPersonality?.name}] ${text}`
-        console.log("reasoning response", { prompt, output })
+        const text = completion.choices[0].message.content;
+        const output = `${selectedPersonality?.emoji} [${selectedPersonality?.name}] ${text}`;
+        console.log("reasoning response", { prompt, output });
         return output;
       } catch (error) {
         console.error("Error calling o1-mini:", error);
@@ -313,7 +331,8 @@ ${history ? `Additional Context: ${history}` : ''}`
 
     retrievalAugmentedGeneration: async ({ query }) => {
       const result = await fetchArxivPapers(query);
-      if (result.papers.length === 0) return "No relevant research papers found.";
+      if (result.papers.length === 0)
+        return "No relevant research papers found.";
 
       let extractedInsights = "";
       let references = [];
@@ -323,10 +342,12 @@ ${history ? `Additional Context: ${history}` : ''}`
         references.push({ title: paper.title, link: paper.link });
       }
 
-      return { insights: extractedInsights || "No direct mentions found in summaries.", references };
+      return {
+        insights: extractedInsights || "No direct mentions found in summaries.",
+        references,
+      };
     },
-
-  }
+  },
 };
 
 // export const ultronFlow = injectTransferTools([ultronConfig]);
